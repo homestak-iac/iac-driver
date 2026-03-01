@@ -44,14 +44,12 @@ class HostConfig:
     name: str
     config_file: Path
     api_endpoint: str = ''
-    node_name: str = ''
     ssh_host: str = ''
     inner_vm_id: int = 99800  # Match site-config vmid_base for child PVE nodes
     test_vm_id: int = 99900   # Match site-config/envs/test.yaml vmid_base
     ssh_user: str = field(default_factory=lambda: os.getenv('USER', ''))
     automation_user: str = 'homestak'  # For SSH to VMs (created via cloud-init)
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')
-    datastore: str = 'local-zfs'
 
     # Packer release settings
     packer_release_repo: str = 'homestak-dev/packer'
@@ -110,18 +108,11 @@ class HostConfig:
         if not self.api_endpoint:
             self.api_endpoint = node_config.get('api_endpoint', '')
 
-        if not self.node_name:
-            self.node_name = node_config.get('node', self.name)
-
         # Resolve api_token from secrets
         api_token_key = node_config.get('api_token', self.name)
         if secrets and 'api_tokens' in secrets:
             # Store resolved token for use by scenarios
             self._api_token = secrets['api_tokens'].get(api_token_key, '')
-
-        # Datastore: node > site > default
-        self.datastore = str(node_config.get('datastore',
-                                             site_defaults.get('datastore', 'local-zfs')))
 
         # SSH user: node > site > default (for PVE host connections)
         if ssh_user := node_config.get('ssh_user', site_defaults.get('ssh_user')):

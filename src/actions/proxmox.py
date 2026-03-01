@@ -1,4 +1,8 @@
-"""Proxmox VE actions."""
+"""Proxmox VE actions.
+
+Local actions execute PVE commands directly via subprocess (operator runs
+on the PVE host). Remote actions use SSH for delegated child PVE nodes.
+"""
 
 import fnmatch
 import json
@@ -7,40 +11,84 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-from common import ActionResult, run_ssh, start_vm, wait_for_guest_agent
+from common import ActionResult, run_command, run_ssh, sudo_prefix, _extract_ipv4
 from config import HostConfig
 
 logger = logging.getLogger(__name__)
 
 
+def _resolve(attr: str, config: HostConfig, context: dict):
+    """Resolve attribute from context (preferred) or config."""
+    return context.get(attr) or getattr(config, attr, None)
+
+
+def _get_local_vm_ip(vm_id: int, timeout: int = 30) -> Optional[str]:
+    """Get VM IP via local qm guest agent command."""
+    rc, out, _ = run_command(
+        ['sudo', 'qm', 'guest', 'cmd', str(vm_id), 'network-get-interfaces'],
+        timeout=timeout
+    )
+    if rc != 0:
+        return None
+    try:
+        interfaces = json.loads(out)
+        for iface in interfaces:
+            ip: Optional[str] = _extract_ipv4(iface)
+            if ip:
+                return ip
+    except (json.JSONDecodeError, KeyError):
+        pass
+    return None
+
+
+def _wait_for_local_guest_agent(
+    vm_id: int, timeout: int = 300, interval: int = 5
+) -> Optional[str]:
+    """Poll local guest agent for VM IP."""
+    logger.info(f"Waiting for guest agent on VM {vm_id}...")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        ip = _get_local_vm_ip(vm_id)
+        if ip:
+            logger.info(f"VM {vm_id} has IP: {ip}")
+            return ip
+        logger.debug(f"Guest agent not ready on VM {vm_id}, retrying...")
+        time.sleep(interval)
+    logger.error(f"Guest agent timeout for VM {vm_id}")
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Local actions — execute on the operator's own PVE host via subprocess
+# ---------------------------------------------------------------------------
+
 @dataclass
 class StartVMAction:
-    """Start a VM on a PVE host."""
+    """Start a VM on the local PVE host."""
     name: str
-    vm_id_attr: str = 'inner_vm_id'  # config attribute for VM ID
-    pve_host_attr: str = 'ssh_host'  # config attribute for PVE host
+    vm_id_attr: str = 'inner_vm_id'
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Start the VM."""
+        """Start a VM via local qm command."""
         start = time.time()
+        vm_id = _resolve(self.vm_id_attr, config, context)
 
-        # Check context first (from TofuApplyAction), then config
-        vm_id = context.get(self.vm_id_attr) or getattr(config, self.vm_id_attr, None)
-        pve_host = context.get(self.pve_host_attr) or getattr(config, self.pve_host_attr, None)
-        ssh_user = config.automation_user
-
-        if not vm_id or not pve_host:
+        if not vm_id:
             return ActionResult(
                 success=False,
-                message=f"Missing config: {self.vm_id_attr}={vm_id}, {self.pve_host_attr}={pve_host}",
+                message=f"Missing: {self.vm_id_attr}",
                 duration=time.time() - start
             )
 
-        logger.info(f"[{self.name}] Starting VM {vm_id} on {pve_host}...")
-        if not start_vm(vm_id, pve_host, user=ssh_user):
+        logger.info(f"[{self.name}] Starting VM {vm_id}...")
+        rc, _, err = run_command(
+            ['sudo', 'qm', 'start', str(vm_id)], timeout=60
+        )
+
+        if rc != 0:
             return ActionResult(
                 success=False,
-                message=f"Failed to start VM {vm_id}",
+                message=f"Failed to start VM {vm_id}: {err}",
                 duration=time.time() - start
             )
 
@@ -56,28 +104,23 @@ class WaitForGuestAgentAction:
     """Wait for QEMU guest agent and get VM IP."""
     name: str
     vm_id_attr: str = 'inner_vm_id'
-    pve_host_attr: str = 'ssh_host'
-    ip_context_key: str = 'node_ip'  # store IP in context
+    ip_context_key: str = 'node_ip'
     timeout: int = 300
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Wait for guest agent and extract IP."""
+        """Poll guest agent for VM IP and store in context."""
         start = time.time()
+        vm_id = _resolve(self.vm_id_attr, config, context)
 
-        # Check context first (from TofuApplyAction), then config
-        vm_id = context.get(self.vm_id_attr) or getattr(config, self.vm_id_attr, None)
-        pve_host = context.get(self.pve_host_attr) or getattr(config, self.pve_host_attr, None)
-        ssh_user = config.automation_user
-
-        if not vm_id or not pve_host:
+        if not vm_id:
             return ActionResult(
                 success=False,
-                message=f"Missing config: {self.vm_id_attr}={vm_id}, {self.pve_host_attr}={pve_host}",
+                message=f"Missing: {self.vm_id_attr}",
                 duration=time.time() - start
             )
 
         logger.info(f"[{self.name}] Waiting for guest agent on VM {vm_id}...")
-        ip = wait_for_guest_agent(vm_id, pve_host, timeout=self.timeout, user=ssh_user)
+        ip = _wait_for_local_guest_agent(vm_id, timeout=self.timeout)
 
         if not ip:
             return ActionResult(
@@ -98,27 +141,20 @@ class WaitForGuestAgentAction:
 class LookupVMIPAction:
     """Look up a running VM's IP from the guest agent.
 
-    Used by destructor to find VM IPs when context is not available
-    (e.g., when destructor runs as a new scenario).
+    Used during destroy to find VM IPs when context is not available
+    (e.g., when destroy runs as a fresh invocation without prior create context).
     """
     name: str
-    vmid: int  # Explicit VM ID from manifest
-    ip_context_key: str  # Context key to store IP
-    pve_host: str = 'localhost'  # PVE host to query (default: local)
-    timeout: int = 30  # Quick timeout since VM should already be running
+    vmid: int
+    ip_context_key: str
+    timeout: int = 30  # Short — VM should already be running
 
-    def run(self, config: HostConfig, _context: dict) -> ActionResult:
-        """Query guest agent for VM IP."""
+    def run(self, _config: HostConfig, _context: dict) -> ActionResult:
+        """Look up VM IP from guest agent."""
         start = time.time()
-        ssh_user = config.automation_user
 
         logger.info(f"[{self.name}] Looking up IP for VM {self.vmid}...")
-        ip = wait_for_guest_agent(
-            self.vmid,
-            self.pve_host,
-            timeout=self.timeout,
-            user=ssh_user
-        )
+        ip = _wait_for_local_guest_agent(self.vmid, timeout=self.timeout)
 
         if not ip:
             return ActionResult(
@@ -138,12 +174,11 @@ class LookupVMIPAction:
 
 @dataclass
 class StartProvisionedVMsAction:
-    """Start all VMs from provisioned_vms context (for multi-VM environments)."""
+    """Start all VMs from provisioned_vms context."""
     name: str
-    pve_host_attr: str = 'ssh_host'
 
-    def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Start all provisioned VMs."""
+    def run(self, _config: HostConfig, context: dict) -> ActionResult:
+        """Start all VMs listed in provisioned_vms context."""
         start = time.time()
 
         provisioned_vms = context.get('provisioned_vms', [])
@@ -154,29 +189,22 @@ class StartProvisionedVMsAction:
                 duration=time.time() - start
             )
 
-        pve_host = context.get(self.pve_host_attr) or getattr(config, self.pve_host_attr, None)
-        ssh_user = config.automation_user
-
-        if not pve_host:
-            return ActionResult(
-                success=False,
-                message=f"Missing config: {self.pve_host_attr}",
-                duration=time.time() - start
-            )
-
         started = []
         for vm in provisioned_vms:
             vm_name = vm.get('name')
             vm_id = vm.get('vmid')
-            logger.info(f"[{self.name}] Starting VM {vm_id} ({vm_name}) on {pve_host}...")
-            if start_vm(vm_id, pve_host, user=ssh_user):
-                started.append(vm_name)
-            else:
+            logger.info(f"[{self.name}] Starting VM {vm_id} ({vm_name})...")
+
+            rc, _, err = run_command(
+                ['sudo', 'qm', 'start', str(vm_id)], timeout=60
+            )
+            if rc != 0:
                 return ActionResult(
                     success=False,
-                    message=f"Failed to start VM {vm_id} ({vm_name})",
+                    message=f"Failed to start VM {vm_id} ({vm_name}): {err}",
                     duration=time.time() - start
                 )
+            started.append(vm_name)
 
         return ActionResult(
             success=True,
@@ -189,11 +217,10 @@ class StartProvisionedVMsAction:
 class WaitForProvisionedVMsAction:
     """Wait for guest agent on all provisioned VMs and collect their IPs."""
     name: str
-    pve_host_attr: str = 'ssh_host'
     timeout: int = 300
 
-    def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Wait for guest agent on all provisioned VMs."""
+    def run(self, _config: HostConfig, context: dict) -> ActionResult:
+        """Wait for guest agent on all provisioned VMs and collect IPs."""
         start = time.time()
 
         provisioned_vms = context.get('provisioned_vms', [])
@@ -204,25 +231,13 @@ class WaitForProvisionedVMsAction:
                 duration=time.time() - start
             )
 
-        pve_host = context.get(self.pve_host_attr) or getattr(config, self.pve_host_attr, None)
-        ssh_user = config.automation_user
-
-        if not pve_host:
-            return ActionResult(
-                success=False,
-                message=f"Missing config: {self.pve_host_attr}",
-                duration=time.time() - start
-            )
-
         context_updates = {}
-        vm_ips = {}
-
         for vm in provisioned_vms:
             vm_name = vm.get('name')
             vm_id = vm.get('vmid')
             logger.info(f"[{self.name}] Waiting for guest agent on VM {vm_id} ({vm_name})...")
 
-            ip = wait_for_guest_agent(vm_id, pve_host, timeout=self.timeout, user=ssh_user)
+            ip = _wait_for_local_guest_agent(vm_id, timeout=self.timeout)
             if not ip:
                 return ActionResult(
                     success=False,
@@ -230,43 +245,44 @@ class WaitForProvisionedVMsAction:
                     duration=time.time() - start
                 )
 
-            # Store IP as {name}_ip (e.g., deb12-leaf_ip)
             context_updates[f'{vm_name}_ip'] = ip
-            vm_ips[vm_name] = ip
             logger.info(f"[{self.name}] VM {vm_name} has IP: {ip}")
 
-        # Also store first VM's IP as 'vm_ip' for backward compatibility
-        if vm_ips:
-            first_vm = provisioned_vms[0]['name']
-            context_updates['vm_ip'] = vm_ips[first_vm]
+        # First VM's IP as 'vm_ip' for backward compatibility
+        if provisioned_vms:
+            first_name = provisioned_vms[0]['name']
+            context_updates['vm_ip'] = context_updates[f'{first_name}_ip']
 
         return ActionResult(
             success=True,
-            message=f"Got IPs for {len(vm_ips)} VMs",
+            message=f"Got IPs for {len(context_updates) - 1} VMs",
             duration=time.time() - start,
             context_updates=context_updates
         )
 
+
+# ---------------------------------------------------------------------------
+# Remote actions — operate on delegated child PVE nodes via SSH
+# ---------------------------------------------------------------------------
 
 @dataclass
 class StartVMRemoteAction:
     """Start a VM on a remote PVE host via SSH."""
     name: str
     vm_id_attr: str = 'test_vm_id'
-    pve_host_key: str = 'node_ip'  # context key for remote PVE host
+    pve_host_key: str = 'node_ip'
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Start VM on remote PVE."""
+        """Start a VM on a remote PVE host via SSH."""
         start = time.time()
 
-        # Check context first (from TofuApplyAction), then config
-        vm_id = context.get(self.vm_id_attr) or getattr(config, self.vm_id_attr, None)
+        vm_id = _resolve(self.vm_id_attr, config, context)
         pve_host = context.get(self.pve_host_key)
 
         if not vm_id:
             return ActionResult(
                 success=False,
-                message=f"Missing config attribute: {self.vm_id_attr}",
+                message=f"Missing: {self.vm_id_attr}",
                 duration=time.time() - start
             )
 
@@ -307,17 +323,16 @@ class WaitForGuestAgentRemoteAction:
     interval: int = 5
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Wait for guest agent on remote PVE."""
+        """Poll remote guest agent for VM IP via SSH."""
         start = time.time()
 
-        # Check context first (from TofuApplyAction), then config
-        vm_id = context.get(self.vm_id_attr) or getattr(config, self.vm_id_attr, None)
+        vm_id = _resolve(self.vm_id_attr, config, context)
         pve_host = context.get(self.pve_host_key)
 
         if not vm_id:
             return ActionResult(
                 success=False,
-                message=f"Missing config attribute: {self.vm_id_attr}",
+                message=f"Missing: {self.vm_id_attr}",
                 duration=time.time() - start
             )
 
@@ -330,7 +345,6 @@ class WaitForGuestAgentRemoteAction:
 
         logger.info(f"[{self.name}] Waiting for guest agent on VM {vm_id}...")
 
-        # Poll for IP via remote qm command
         ssh_user = config.automation_user
         leaf_ip = None
         deadline = time.time() + self.timeout
@@ -363,7 +377,7 @@ class WaitForGuestAgentRemoteAction:
 
 @dataclass
 class DiscoverVMsAction:
-    """Discover VMs matching a pattern via PVE API.
+    """Discover VMs matching a pattern via PVE API on a remote host.
 
     Queries the PVE cluster resources API and filters by name pattern
     and optional vmid range. Populates context['discovered_vms'] with
@@ -375,23 +389,22 @@ class DiscoverVMsAction:
     vmid_range: Optional[tuple[int, int]] = (99900, 99999)
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Query PVE API and filter by pattern/range."""
+        """Query PVE API via SSH and filter VMs by name/vmid."""
         start = time.time()
 
-        pve_host = context.get(self.pve_host_attr) or getattr(config, self.pve_host_attr, None)
-        ssh_user = config.automation_user
-
+        pve_host = _resolve(self.pve_host_attr, config, context)
         if not pve_host:
             return ActionResult(
                 success=False,
-                message=f"Missing config: {self.pve_host_attr}",
+                message=f"Missing: {self.pve_host_attr}",
                 duration=time.time() - start
             )
 
+        ssh_user = config.automation_user
+        sudo = sudo_prefix(ssh_user)
+
         logger.info(f"[{self.name}] Discovering VMs matching '{self.name_pattern}' on {pve_host}...")
 
-        # Query PVE cluster resources
-        sudo = '' if ssh_user == 'root' else 'sudo '
         cmd = f"{sudo}pvesh get /cluster/resources --type vm --output-format json"
         rc, out, err = run_ssh(pve_host, cmd, user=ssh_user, timeout=30)
 
@@ -416,14 +429,11 @@ class DiscoverVMsAction:
             vm_name = vm.get('name', '')
             vm_id = vm.get('vmid')
 
-            # Filter by name pattern (fnmatch supports wildcards)
             if not fnmatch.fnmatch(vm_name, self.name_pattern):
                 continue
 
-            # Filter by vmid range (if specified)
-            if self.vmid_range:
-                if vm_id < self.vmid_range[0] or vm_id > self.vmid_range[1]:
-                    continue
+            if self.vmid_range and (vm_id < self.vmid_range[0] or vm_id > self.vmid_range[1]):
+                continue
 
             discovered.append({
                 'vmid': vm_id,
@@ -443,10 +453,10 @@ class DiscoverVMsAction:
 
 @dataclass
 class DestroyDiscoveredVMsAction:
-    """Destroy all VMs in context['discovered_vms'].
+    """Destroy all VMs in context['discovered_vms'] on a remote host.
 
-    Stops running VMs and then destroys them. Useful for cleanup
-    operations where VMs were discovered by pattern matching.
+    Stops running VMs and then destroys them. Used for cleanup
+    of VMs discovered by pattern matching.
     """
     name: str
     pve_host_attr: str = 'ssh_host'
@@ -455,7 +465,7 @@ class DestroyDiscoveredVMsAction:
     stop_timeout: int = 30
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Stop and destroy each discovered VM."""
+        """Stop and destroy all discovered VMs via SSH."""
         start = time.time()
 
         vms = context.get(self.context_key, [])
@@ -466,15 +476,16 @@ class DestroyDiscoveredVMsAction:
                 duration=time.time() - start
             )
 
-        pve_host = context.get(self.pve_host_attr) or getattr(config, self.pve_host_attr, None)
-        ssh_user = config.automation_user
-
+        pve_host = _resolve(self.pve_host_attr, config, context)
         if not pve_host:
             return ActionResult(
                 success=False,
-                message=f"Missing config: {self.pve_host_attr}",
+                message=f"Missing: {self.pve_host_attr}",
                 duration=time.time() - start
             )
+
+        ssh_user = config.automation_user
+        sudo = sudo_prefix(ssh_user)
 
         destroyed = []
         for vm in vms:
@@ -483,8 +494,6 @@ class DestroyDiscoveredVMsAction:
             vm_status = vm.get('status', 'unknown')
 
             logger.info(f"[{self.name}] Destroying VM {vm_id} ({vm_name})...")
-
-            sudo = '' if ssh_user == 'root' else 'sudo '
 
             # Stop if running
             if vm_status == 'running' and self.force_stop:
@@ -497,9 +506,8 @@ class DestroyDiscoveredVMsAction:
                 )
                 if rc != 0:
                     logger.warning(f"[{self.name}] Failed to stop VM {vm_id}: {err}")
-                    # Continue anyway - destroy might still work
 
-            # Destroy the VM
+            # Destroy
             rc, _, err = run_ssh(
                 pve_host,
                 f"{sudo}qm destroy {vm_id} --purge",

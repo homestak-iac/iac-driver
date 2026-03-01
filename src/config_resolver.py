@@ -222,7 +222,6 @@ class ConfigResolver:
             "node": node_config.get("node", node),
             "api_endpoint": api_endpoint,
             "api_token": api_token,
-            "ssh_user": node_config.get("ssh_user", defaults.get("ssh_user", "root")),
             "ssh_private_key_file": self._find_ssh_private_key(),
             "automation_user": defaults.get("automation_user", "homestak"),
             "ssh_host": ssh_host,

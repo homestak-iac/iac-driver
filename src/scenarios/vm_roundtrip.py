@@ -404,12 +404,10 @@ class SpecVMPushRoundtrip:
 
             ('start', StartProvisionedVMsAction(
                 name='start-vms',
-                pve_host_attr='ssh_host',
             ), 'Start VM(s)'),
 
             ('wait_ip', WaitForProvisionedVMsAction(
                 name='wait-for-ips',
-                pve_host_attr='ssh_host',
                 timeout=180,
             ), 'Wait for VM IP(s)'),
 
@@ -483,12 +481,10 @@ class SpecVMPullRoundtrip:
 
             ('start', StartProvisionedVMsAction(
                 name='start-vms',
-                pve_host_attr='ssh_host',
             ), 'Start VM(s)'),
 
             ('wait_ip', WaitForProvisionedVMsAction(
                 name='wait-for-ips',
-                pve_host_attr='ssh_host',
                 timeout=180,
             ), 'Wait for VM IP(s)'),
 

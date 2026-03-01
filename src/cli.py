@@ -22,8 +22,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import re
-
 from config import list_hosts, load_host_config, get_base_dir
 from scenarios import Orchestrator, get_scenario, list_scenarios
 from validation import validate_readiness, run_preflight_checks, format_preflight_results
@@ -39,8 +37,14 @@ NOUN_COMMANDS = {
 
 
 def _is_ip_address(value: str) -> bool:
-    """Check if value looks like an IPv4 address."""
-    return bool(re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', value))
+    """Check if value is a valid IPv4 address."""
+    parts = value.split('.')
+    if len(parts) != 4:
+        return False
+    try:
+        return all(0 <= int(p) <= 255 for p in parts)
+    except ValueError:
+        return False
 
 
 def _parse_host_arg(value: str) -> tuple[str | None, str]:

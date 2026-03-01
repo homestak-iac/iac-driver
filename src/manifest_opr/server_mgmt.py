@@ -8,6 +8,7 @@ propagation, and address resolution for nested deployments.
 import json
 import logging
 import os
+import socket
 from typing import Optional
 
 from common import run_command, run_ssh
@@ -40,7 +41,10 @@ class ServerManager:
         self.port = port
         self._refs: int = 0
         self._started: bool = False
-        self._is_local = ssh_host in ('localhost', '127.0.0.1', '::1')
+        loopback = ('localhost', '127.0.0.1', '::1')
+        self._is_local = ssh_host in loopback or ssh_host in (
+            socket.gethostname(), socket.getfqdn()
+        )
 
     def _run_on_host(self, cmd: str, timeout: int = 15) -> tuple[int, str, str]:
         """Run a command on the target host, locally or via SSH."""
@@ -158,7 +162,6 @@ class ServerManager:
         determine which local interface the OS would route through.
         Falls back to None if detection fails or returns a non-routable address.
         """
-        import socket
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 s.connect(('198.51.100.1', 1))  # RFC 5737, no traffic sent
