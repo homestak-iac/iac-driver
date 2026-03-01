@@ -11,6 +11,11 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
+def sudo_prefix(user: str) -> str:
+    """Return 'sudo ' for non-root users, empty string for root."""
+    return '' if user == 'root' else 'sudo '
+
+
 def get_homestak_lib() -> Path:
     """Return the homestak lib directory (code repos)."""
     return Path(os.environ.get('HOMESTAK_LIB', Path.home() / 'lib'))

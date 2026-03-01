@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-from common import ActionResult, run_ssh
+from common import ActionResult, run_ssh, sudo_prefix
 from config import HostConfig
 
 logger = logging.getLogger(__name__)
@@ -23,14 +23,14 @@ class RemoveImageAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        # PVE storage operations require root
-        user = 'root'
+        user = config.automation_user
+        sudo = sudo_prefix(user)
         image_name = config.packer_image.replace('.qcow2', '.img')
         image_path = f'{self.image_dir}/{image_name}'
 
         # Check if image exists
         logger.info(f"[{self.name}] Checking for {image_name} on {pve_host}...")
-        rc, out, err = run_ssh(pve_host, f'test -f {image_path} && echo exists',
+        rc, out, err = run_ssh(pve_host, f'{sudo}test -f {image_path} && echo exists',
                                user=user, timeout=30)
 
         if rc != 0 or 'exists' not in out:
@@ -48,7 +48,7 @@ class RemoveImageAction:
 
         # Remove image
         logger.info(f"[{self.name}] Removing {image_name} from {pve_host}...")
-        rc, out, err = run_ssh(pve_host, f'rm -f {image_path}', user=user, timeout=30)
+        rc, out, err = run_ssh(pve_host, f'{sudo}rm -f {image_path}', user=user, timeout=30)
 
         if rc != 0:
             return ActionResult(
@@ -88,8 +88,7 @@ class DownloadFileAction:
             )
 
         user = config.automation_user
-        # Use sudo if not root — writes to PVE storage (/var/lib/vz/template/iso/)
-        sudo = '' if user == 'root' else 'sudo '
+        sudo = sudo_prefix(user)
 
         # Determine filename
         filename = self.dest_filename or self.url.split('/')[-1]
@@ -238,8 +237,7 @@ print('\\n'.join(parts))
             )
 
         user = config.automation_user
-        # Use sudo if not root — writes to PVE storage (/var/lib/vz/template/iso/)
-        sudo = '' if user == 'root' else 'sudo '
+        sudo = sudo_prefix(user)
 
         repo = config.packer_release_repo
         tag = config.packer_release

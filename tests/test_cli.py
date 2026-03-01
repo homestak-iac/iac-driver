@@ -110,6 +110,54 @@ class TestCreateLocalConfig:
         assert config.api_endpoint == 'https://localhost:8006'
 
 
+class TestIsIpAddress:
+    """Tests for _is_ip_address() IPv4 validation."""
+
+    def test_valid_ip(self):
+        from src.cli import _is_ip_address
+        assert _is_ip_address('192.168.1.1')
+
+    def test_valid_ip_zeros(self):
+        from src.cli import _is_ip_address
+        assert _is_ip_address('0.0.0.0')
+
+    def test_valid_ip_max(self):
+        from src.cli import _is_ip_address
+        assert _is_ip_address('255.255.255.255')
+
+    def test_loopback(self):
+        from src.cli import _is_ip_address
+        assert _is_ip_address('127.0.0.1')
+
+    def test_rejects_octet_over_255(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('256.1.1.1')
+
+    def test_rejects_all_999(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('999.999.999.999')
+
+    def test_rejects_too_few_octets(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('1.1.1')
+
+    def test_rejects_too_many_octets(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('1.1.1.1.1')
+
+    def test_rejects_hostname(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('srv1')
+
+    def test_rejects_empty(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('')
+
+    def test_rejects_letters_in_octet(self):
+        from src.cli import _is_ip_address
+        assert not _is_ip_address('192.168.1.abc')
+
+
 class TestParseHostArg:
     """Tests for _parse_host_arg() user@host parsing."""
 

@@ -265,12 +265,7 @@ class NodeExecutor:
         start_action = StartVMAction(
             name=f'start-{mn.name}',
             vm_id_attr=f'{mn.name}_vm_id',
-            pve_host_attr='ssh_host' if exec_node.is_root else None,
         )
-        # For non-root nodes, we need to set the PVE host in context
-        if not exec_node.is_root:
-            context[f'_pve_host_{mn.name}'] = pve_host
-
         start_result = start_action.run(self.config, context)
         if not start_result.success:
             return ActionResult(
@@ -284,7 +279,6 @@ class NodeExecutor:
         wait_action = WaitForGuestAgentAction(
             name=f'wait-ip-{mn.name}',
             vm_id_attr=f'{mn.name}_vm_id',
-            pve_host_attr='ssh_host' if exec_node.is_root else None,
             ip_context_key=f'{mn.name}_ip',
             timeout=300,
         )
