@@ -14,6 +14,20 @@ This repo provides scenario-based workflows that coordinate the tool repositorie
 | tofu | VM provisioning with OpenTofu | https://github.com/homestak-dev/tofu |
 | packer | Custom Debian cloud image building | https://github.com/homestak-dev/packer |
 
+## Execution Models
+
+iac-driver has three execution contexts:
+
+| Context | Runs where | Reaches out via | `-H` flag |
+|---------|-----------|-----------------|-----------|
+| **Scenario** | Locally on the host being configured | Nothing (local ansible) | Optional — auto-detects from hostname |
+| **Manifest** | Anywhere (orchestrator) | PVE API (HTTPS) + SSH to VMs | Required — specifies target PVE host |
+| **Config** | Locally on the VM being configured | Server (HTTPS fetch), then local ansible | Not used |
+
+- **Scenarios** (pve-setup, user-setup) configure the local host. Run on the PVE host as the `homestak` user.
+- **Manifests** (apply, destroy, test) orchestrate infrastructure. They call the PVE API to provision VMs and SSH to VMs for config push. Can run from any machine with API access.
+- **Config** (fetch, apply) is the pull-mode self-configuration path. A VM fetches its spec from the server, then applies it locally.
+
 ## Quick Start
 
 ```bash
