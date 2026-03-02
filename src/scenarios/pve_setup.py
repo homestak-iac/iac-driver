@@ -22,6 +22,31 @@ from scenarios import register_scenario
 logger = logging.getLogger(__name__)
 
 
+def _set_bootnext_and_reboot():
+    """Reboot with BootNext set to current disk entry.
+
+    Prevents UEFI from auto-discovering USB media on reboot.
+    Falls back to bare reboot if efibootmgr is unavailable.
+    """
+    try:
+        result = subprocess.run(
+            ['efibootmgr'], capture_output=True, text=True, timeout=10, check=False
+        )
+        for line in result.stdout.splitlines():
+            if line.startswith('BootCurrent:'):
+                entry = line.split(':')[1].strip()
+                subprocess.run(
+                    ['sudo', 'efibootmgr', '-n', entry],
+                    check=True, timeout=10
+                )
+                logger.info("Set BootNext=%s (current disk entry)", entry)
+                break
+    except (FileNotFoundError, subprocess.SubprocessError) as exc:
+        logger.debug("efibootmgr unavailable, falling back to bare reboot: %s", exc)
+
+    subprocess.run(['sudo', 'systemctl', 'reboot'], check=False, timeout=30)
+
+
 @register_scenario
 class PVESetup:
     """Install and configure a PVE host."""
@@ -120,10 +145,7 @@ class _EnsurePVEPhase:
             # Reboot to load Proxmox kernel. On restart, pve-setup will
             # re-enter and resume at phase 2 (kernel_installed=True).
             logger.info("Rebooting to load Proxmox kernel...")
-            subprocess.run(
-                ['sudo', 'systemctl', 'reboot'],
-                check=False, timeout=30
-            )
+            _set_bootnext_and_reboot()
             time.sleep(300)  # Wait for reboot to kill us
             return ActionResult(
                 success=False,
