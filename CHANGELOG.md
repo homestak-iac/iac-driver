@@ -10,6 +10,28 @@
   - Delegation commands use `~/lib/iac-driver` and `./run.sh` (no sudo)
   - Server log moves from `/var/log/homestak/` to `~/log/`
   - State/spec paths use `~/etc/state/` instead of `/usr/local/etc/homestak/state/`
+- Convert local PVE actions from SSH-to-self to subprocess (#267)
+  - `StartVMAction`, `WaitForGuestAgentAction`, `LookupVMIPAction` use `run_command()` + `sudo`
+  - Guest agent IP parsing uses Python `json.loads()` instead of `jq` shell pipeline
+  - Remote variants (`StartVMRemoteAction`, `DiscoverVMsAction`) kept for delegation
+- Add `sudo_prefix()` shared helper to `common.py` (#267)
+- Enhance `ServerManager._is_local` to detect hostname match, not just loopback literals (#267)
+- Replace hardcoded `user='root'` in `RemoveImageAction` with `automation_user` + sudo (#267)
+- Use `sudo_prefix()` consistently in all file download/remove actions (#267)
+
+### Fixed
+- Set BootNext before reboot in pve-setup to prevent UEFI USB boot (#247)
+- Use `automation_user` for server SSH in roundtrip scenarios (#279)
+- Tighten `_is_ip_address()` to validate octet ranges (0-255), rejecting IPs like `999.999.999.999`
+
+### Removed
+- Remove `_run_remote()` paths from pve-setup scenario — local-first execution model only (#267)
+  - Remove `_EnsurePVEPhase._run_remote()`, `_GenerateNodeConfigPhase._run_remote()`, `_CreateApiTokenPhase._run_remote()`
+  - Remove `_wait_for_pvedaemon_remote()` and `_inject_token_remote()` helpers
+  - Remove unused imports: `AnsiblePlaybookAction`, `EnsurePVEAction`, `run_ssh`, `wait_for_ssh`
+- Remove `node_name` and `datastore` from `HostConfig` — only used by `ConfigResolver` (#275)
+- Remove `ssh_user` from ConfigResolver tfvars output — tofu `var.ssh_user` was declared but never referenced (#275)
+- Remove `pve_host_attr` from local action dataclasses — local actions no longer need host address (#267)
 
 ## v0.51 - 2026-02-28
 
