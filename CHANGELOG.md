@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.52 - 2026-03-02
+
 ### Changed
 - **BREAKING**: Migrate from FHS paths to user-owned `~homestak/` model (bootstrap#75)
   - Add `get_homestak_lib()` and `get_homestak_etc()` helpers to `common.py`
