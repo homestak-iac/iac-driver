@@ -2,14 +2,9 @@
 
 ## Unreleased
 
+## v0.53 - 2026-03-06
+
 ### Changed
-- **BREAKING**: Migrate from FHS paths to user-owned `~homestak/` model (bootstrap#75)
-  - Add `get_homestak_lib()` and `get_homestak_etc()` helpers to `common.py`
-  - Path discovery: `~/etc/` and `~/lib/` checked before FHS fallback
-  - Remove `sudo` from file operations on user-owned paths (secrets, site config, SSH keys)
-  - Delegation commands use `~/lib/iac-driver` and `./run.sh` (no sudo)
-  - Server log moves from `/var/log/homestak/` to `~/log/`
-  - State/spec paths use `~/etc/state/` instead of `/usr/local/etc/homestak/state/`
 - Convert local PVE actions from SSH-to-self to subprocess (#267)
   - `StartVMAction`, `WaitForGuestAgentAction`, `LookupVMIPAction` use `run_command()` + `sudo`
   - Guest agent IP parsing uses Python `json.loads()` instead of `jq` shell pipeline
@@ -32,6 +27,17 @@
 - Remove `node_name` and `datastore` from `HostConfig` — only used by `ConfigResolver` (#275)
 - Remove `ssh_user` from ConfigResolver tfvars output — tofu `var.ssh_user` was declared but never referenced (#275)
 - Remove `pve_host_attr` from local action dataclasses — local actions no longer need host address (#267)
+
+## v0.52 - 2026-03-02
+
+### Changed
+- **BREAKING**: Migrate from FHS paths to user-owned `~homestak/` model (bootstrap#75)
+  - Add `get_homestak_lib()` and `get_homestak_etc()` helpers to `common.py`
+  - Path discovery: `~/etc/` and `~/lib/` checked before FHS fallback
+  - Remove `sudo` from file operations on user-owned paths (secrets, site config, SSH keys)
+  - Delegation commands use `~/lib/iac-driver` and `./run.sh` (no sudo)
+  - Server log moves from `/var/log/homestak/` to `~/log/`
+  - State/spec paths use `~/etc/state/` instead of `/usr/local/etc/homestak/state/`
 
 ## v0.51 - 2026-02-28
 
