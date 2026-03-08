@@ -799,7 +799,7 @@ class NodeExecutor:
         # Pass --self-addr so the inner executor knows its routable address
         # for HOMESTAK_SOURCE (avoids localhost propagation, #200)
         raw_cmd = (
-            f'cd ~/lib/iac-driver && '
+            f'cd ~/iac/iac-driver && '
             f'./run.sh manifest apply '
             f'--manifest-json {shlex.quote(subtree_json)} '
             f'-H {shlex.quote(inner_hostname)} '
@@ -841,7 +841,7 @@ class NodeExecutor:
         inner_hostname = mn.name
 
         raw_cmd = (
-            f'cd ~/lib/iac-driver && '
+            f'cd ~/iac/iac-driver && '
             f'./run.sh manifest destroy '
             f'--manifest-json {shlex.quote(subtree_json)} '
             f'-H {shlex.quote(inner_hostname)} '

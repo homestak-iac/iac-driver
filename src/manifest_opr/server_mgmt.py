@@ -49,14 +49,13 @@ class ServerManager:
     def _run_on_host(self, cmd: str, timeout: int = 15) -> tuple[int, str, str]:
         """Run a command on the target host, locally or via SSH."""
         if self._is_local:
-            from pathlib import Path
-            iac_dir = Path.home() / 'lib' / 'iac-driver'
+            from config import get_base_dir
             result: tuple[int, str, str] = run_command(
                 ['bash', '-c', cmd],
-                cwd=iac_dir, timeout=timeout,
+                cwd=get_base_dir(), timeout=timeout,
             )
             return result
-        result = run_ssh(self.ssh_host, f'cd ~/lib/iac-driver && {cmd}',
+        result = run_ssh(self.ssh_host, f'cd ~/iac/iac-driver && {cmd}',
                          user=self.ssh_user, timeout=timeout)
         return result
 
