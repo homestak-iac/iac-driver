@@ -2,13 +2,13 @@
 # Setup or update tool repositories
 # Usage: setup-tools.sh [options] [base_dir]
 #
-# Clones ansible, tofu, packer, and site-config repos if they don't exist,
+# Clones ansible, tofu, and packer repos if they don't exist,
 # or pulls latest changes if they do.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GITHUB_ORG="homestak-dev"
+GITHUB_ORG="homestak-iac"
 
 show_help() {
     cat << 'EOF'
@@ -24,14 +24,13 @@ Arguments:
   base_dir      Base directory for repos (default: parent of iac-driver)
 
 Description:
-  Clones ansible, tofu, packer, and site-config repos as siblings to iac-driver.
+  Clones ansible, tofu, and packer repos as siblings to iac-driver.
   If repos already exist, pulls latest changes instead.
 
 Repositories:
   - ansible        Playbooks and roles
   - tofu           VM provisioning
   - packer         Cloud image building
-  - site-config    Configuration and secrets
 
 Examples:
   ./setup-tools.sh                    # Use default base directory
@@ -51,7 +50,7 @@ declare -A REPOS=(
   [ansible]="https://github.com/$GITHUB_ORG/ansible.git"
   [tofu]="https://github.com/$GITHUB_ORG/tofu.git"
   [packer]="https://github.com/$GITHUB_ORG/packer.git"
-  [site-config]="https://github.com/$GITHUB_ORG/site-config.git"
+
 )
 
 echo "Setting up tool repositories in: $BASE_DIR"

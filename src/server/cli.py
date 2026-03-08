@@ -136,15 +136,15 @@ def _create_server(args) -> Server:
     repo_token = ""
     if args.repos:
         repos_dir = args.repos_dir or get_default_repos_dir()
-        # Repos outside repos_dir (~/iac/): site-config at ~/config, bootstrap at ~/bootstrap
+        # Repos outside repos_dir (~/iac/): config at ~/config, bootstrap at ~/bootstrap
         extra_paths = {}
         workspace_root = Path(os.environ.get('HOMESTAK_ROOT', str(Path.home())))
         config_dir = workspace_root / 'config'
         if config_dir.is_dir() and (config_dir / '.git').is_dir():
-            extra_paths['site-config'] = config_dir
-            logger.info("Using site-config at %s", config_dir)
+            extra_paths['config'] = config_dir
+            logger.info("Using config at %s", config_dir)
         else:
-            logger.warning("site-config not found at %s", config_dir)
+            logger.warning("config not found at %s", config_dir)
         bootstrap_dir = workspace_root / 'bootstrap'
         if bootstrap_dir.is_dir() and (bootstrap_dir / '.git').is_dir():
             extra_paths['bootstrap'] = bootstrap_dir
