@@ -233,7 +233,7 @@ def validate_bootstrap_installed() -> list[str]:
         errors.append(
             f"Bootstrap not complete - site-config not found\n"
             f"  Expected: {etc_path}\n"
-            f"  Run: curl -fsSL https://raw.githubusercontent.com/homestak-dev/bootstrap/master/install.sh | bash"
+            f"  Run: curl -fsSL https://raw.githubusercontent.com/homestak/bootstrap/master/install | bash"
         )
         return errors
 
@@ -249,7 +249,7 @@ def validate_bootstrap_installed() -> list[str]:
         errors.append(
             f"Bootstrap incomplete - missing repos: {', '.join(missing_repos)}\n"
             f"  Expected at: {lib_path}\n"
-            f"  Re-run: curl -fsSL https://raw.githubusercontent.com/homestak-dev/bootstrap/master/install.sh | bash"
+            f"  Re-run: curl -fsSL https://raw.githubusercontent.com/homestak/bootstrap/master/install | bash"
         )
 
     return errors

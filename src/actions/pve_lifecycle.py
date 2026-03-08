@@ -316,15 +316,15 @@ class BootstrapAction:
             # Include Bearer token in curl header (serve-repos requires auth)
             auth_header = f'-H "Authorization: Bearer {env_token}"' if env_token else ''
             # Use 'sudo env' to pass vars through sudo's environment reset
-            bootstrap_cmd = f'curl -fsSLk {auth_header} {env_source}/bootstrap.git/install.sh | sudo env {env_prefix} bash'
+            bootstrap_cmd = f'curl -fsSLk {auth_header} {env_source}/bootstrap.git/install | sudo env {env_prefix} bash'
             logger.info(f"[{self.name}] Using serve-repos source: {env_source} (ref={env_ref})")
         elif self.source_url:
             # Explicit source_url parameter (legacy)
-            bootstrap_cmd = f'curl -fsSL {self.source_url}/install.sh | sudo bash'
+            bootstrap_cmd = f'curl -fsSL {self.source_url}/install | sudo bash'
         else:
             # Production: use GitHub
-            bootstrap_url = 'https://raw.githubusercontent.com/homestak-dev/bootstrap'
-            bootstrap_cmd = f'curl -fsSL {bootstrap_url}/{self.ref}/install.sh | sudo bash'
+            bootstrap_url = 'https://raw.githubusercontent.com/homestak/bootstrap'
+            bootstrap_cmd = f'curl -fsSL {bootstrap_url}/{self.ref}/install | sudo bash'
 
         logger.info(f"[{self.name}] Bootstrapping {host}...")
 
