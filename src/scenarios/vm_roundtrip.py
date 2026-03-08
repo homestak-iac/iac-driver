@@ -84,7 +84,7 @@ class StartServerAction:
 
         pve_host = config.ssh_host
         ssh_user = config.automation_user
-        iac_dir = '~/lib/iac-driver'
+        iac_dir = '~/iac/iac-driver'
 
         # Check if iac-driver exists on remote host
         check_cmd = f'test -f {iac_dir}/run.sh && echo FOUND || echo NOT_FOUND'
@@ -274,7 +274,7 @@ class StopServerAction:
 
         pve_host = config.ssh_host
         ssh_user = config.automation_user
-        iac_dir = '~/lib/iac-driver'
+        iac_dir = '~/iac/iac-driver'
 
         stop_cmd = f'cd {iac_dir} && ./run.sh server stop --port {self.server_port}'
         logger.info(f"[{self.name}] Stopping server on {pve_host}:{self.server_port}...")

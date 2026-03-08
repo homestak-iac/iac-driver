@@ -59,7 +59,7 @@ cleanup() {
         echo ""
         echo "==> Stopping server on $SSH_HOST:$PORT..."
         ssh "$SSH_USER@$SSH_HOST" \
-            "cd ~/lib/iac-driver" \
+            "cd ~/iac/iac-driver" \
             "&& ./run.sh server stop --port $PORT" \
             2>/dev/null || true
     fi
@@ -126,7 +126,7 @@ echo "==> Manifests: ${MANIFESTS[*]}"
 # Check if server is already running
 SERVER_RUNNING="false"
 if ssh "$SSH_USER@$SSH_HOST" \
-    "cd ~/lib/iac-driver" \
+    "cd ~/iac/iac-driver" \
     "&& ./run.sh server status --json --port $PORT" 2>/dev/null \
     | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(0 if d.get('running') and d.get('healthy') else 1)" 2>/dev/null; then
     SERVER_RUNNING="true"
@@ -137,7 +137,7 @@ if [[ "$SERVER_RUNNING" == "true" ]]; then
 else
     echo "==> Starting server on $SSH_HOST:$PORT..."
     if ! ssh "$SSH_USER@$SSH_HOST" \
-        "cd ~/lib/iac-driver" \
+        "cd ~/iac/iac-driver" \
         "&& ./run.sh server start --port $PORT --repos --repo-token ''" 2>&1; then
         echo "Error: Server start failed" >&2
         exit 2
