@@ -15,9 +15,10 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Server runtime paths (PID stays in /var/run for system visibility, log in ~/log)
+# Server runtime paths (PID stays in /var/run for system visibility, log in $HOMESTAK_ROOT/logs)
 PID_DIR = Path("/var/run/homestak")
-LOG_DIR = Path.home() / "log"
+_HOMESTAK_ROOT = Path(os.environ.get("HOMESTAK_ROOT", str(Path.home())))
+LOG_DIR = _HOMESTAK_ROOT / "logs"
 DEFAULT_LOG_FILE = LOG_DIR / "server.log"
 
 
@@ -118,7 +119,7 @@ def daemonize(
         server_factory: Callable that returns a started Server instance.
             Called in the daemon process after double-fork.
         port: Port the server will listen on (for PID file and health check).
-        log_file: Path for daemon stdout/stderr. Defaults to ~/log/.
+        log_file: Path for daemon stdout/stderr. Defaults to ~/logs/.
 
     Returns:
         Exit code: 0 = daemon started, 1 = error.

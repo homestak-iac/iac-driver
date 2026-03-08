@@ -6,6 +6,7 @@ Provides the `server` verb for server daemon management (start/stop/status).
 import argparse
 import json
 import logging
+import os
 import secrets
 import sys
 from pathlib import Path
@@ -135,18 +136,18 @@ def _create_server(args) -> Server:
     repo_token = ""
     if args.repos:
         repos_dir = args.repos_dir or get_default_repos_dir()
-        # Detect site-config at ~/etc/ (separate from code repos)
+        # Repos outside repos_dir (~/iac/): site-config at ~/config, bootstrap at ~/bootstrap
         extra_paths = {}
-        if not (repos_dir / 'site-config' / '.git').is_dir():
-            home_etc = Path.home() / 'etc'
-            if (home_etc / '.git').is_dir():
-                extra_paths['site-config'] = home_etc
-                logger.info("Using site-config at %s", home_etc)
-            else:
-                logger.warning(
-                    "site-config not found: checked %s/.git (no) and %s/.git (no)",
-                    repos_dir / 'site-config', home_etc,
-                )
+        workspace_root = Path(os.environ.get('HOMESTAK_ROOT', str(Path.home())))
+        config_dir = workspace_root / 'config'
+        if config_dir.is_dir() and (config_dir / '.git').is_dir():
+            extra_paths['site-config'] = config_dir
+            logger.info("Using site-config at %s", config_dir)
+        else:
+            logger.warning("site-config not found at %s", config_dir)
+        bootstrap_dir = workspace_root / 'bootstrap'
+        if bootstrap_dir.is_dir() and (bootstrap_dir / '.git').is_dir():
+            extra_paths['bootstrap'] = bootstrap_dir
         repo_manager = RepoManager(
             repos_dir=repos_dir,
             exclude_repos=args.exclude,
