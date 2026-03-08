@@ -46,10 +46,7 @@ make decrypt
 
 Credentials are managed in the [config](https://github.com/homestak/config) repository using [SOPS](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age).
 
-**Discovery:** iac-driver finds site-config via:
-1. `$HOMESTAK_SITE_CONFIG` environment variable
-2. `../site-config/` sibling directory (dev workspace)
-3. `~/etc/` (user-owned bootstrap)
+**Discovery:** iac-driver finds site-config via `$HOMESTAK_ROOT/config` (defaults to `~/config/`).
 
 **Fallback:** If `secrets.yaml` is missing (no `.enc` file to decrypt), iac-driver automatically runs `make init-secrets` in site-config, which copies from the `.example` template. This enables first-run bootstrap on fresh installations without manual secrets setup.
 
@@ -106,10 +103,9 @@ make decrypt  # Decrypt secrets (requires age key)
 │   │   └── reporting/    # Test report generation (JSON + markdown)
 │   ├── reports/          # Generated test reports
 │   └── scripts/          # Helper scripts
-├── site-config/          # Site-specific secrets and configuration
-├── ansible/              # Tool repo (sibling)
-├── tofu/                 # Tool repo (sibling)
-└── packer/               # Tool repo (sibling)
+├── ansible/              # Tool repo (sibling in ~/iac/)
+├── tofu/                 # Tool repo (sibling in ~/iac/)
+└── packer/               # Tool repo (sibling in ~/iac/)
 ```
 
 ## ConfigResolver
@@ -245,7 +241,7 @@ The server daemon serves specs and git repos over HTTPS. See [server-daemon.md](
 ./run.sh server stop                     # Stop daemon
 ```
 
-PID file: `/var/run/homestak/server.pid` | Log file: `/var/log/homestak/server.log`
+PID file: `/var/run/homestak/server.pid` | Log file: `$HOMESTAK_ROOT/logs/server.log`
 
 Operator (executor.py) auto-manages server lifecycle for manifest verbs with reference counting.
 
@@ -371,6 +367,8 @@ Manifests define N-level tiered PVE deployments using graph-based schema v2. Man
 
 ## Conventions
 
+- **Remote SSH paths** use `~/iac/iac-driver` (hardcoded). This works because on target hosts `$HOME` is the workspace root. If `$HOMESTAK_ROOT` diverges from `$HOME` in the future, these paths should change to `${HOMESTAK_ROOT:-~}/iac/iac-driver`. Grep for `~/iac/iac-driver` to find all occurrences (server_mgmt.py, executor.py, vm_roundtrip.py, parallel-test.sh).
+- **`$HOMESTAK_ROOT`** defaults to `$HOME`. Used for log dir (`$HOMESTAK_ROOT/logs`), site-config (`$HOMESTAK_ROOT/config`), and repo discovery. On target hosts, `$HOME` is always the workspace root so the default is correct.
 - **VM IDs**: 5-digit (10000+ dev, 20000+ k8s)
 - **MAC prefix**: BC:24:11:*
 - **Hostnames**: `{cluster}{instance}` (dev1, router, kubeadm1)

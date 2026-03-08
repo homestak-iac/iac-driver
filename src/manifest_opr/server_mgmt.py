@@ -98,7 +98,7 @@ class ServerManager:
             logger.warning("Server start returned rc=%d: %s",
                            rc, stderr.strip() or stdout.strip())
         else:
-            logger.info("Server started on %s:%d (log: ~/log/server.log)",
+            logger.info("Server started on %s:%d (log: ~/logs/server.log)",
                         self.ssh_host, self.port)
 
         self._started = True

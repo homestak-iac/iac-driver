@@ -22,7 +22,7 @@ from server.auth import validate_repo_token
 logger = logging.getLogger(__name__)
 
 # Known repos to serve
-KNOWN_REPOS = ["bootstrap", "ansible", "iac-driver", "tofu", "packer", "site-config"]
+KNOWN_REPOS = ["bootstrap", "ansible", "iac-driver", "tofu", "packer", "config"]
 
 
 class RepoManager:
@@ -39,7 +39,7 @@ class RepoManager:
         Args:
             repos_dir: Directory containing source repos
             exclude_repos: List of repo names to exclude
-            extra_paths: Map of repo names to alternate paths (e.g., site-config at ~/etc/)
+            extra_paths: Map of repo names to alternate paths (e.g., config at ~/config/)
         """
         self.repos_dir = repos_dir
         self.exclude_repos = set(exclude_repos or [])
