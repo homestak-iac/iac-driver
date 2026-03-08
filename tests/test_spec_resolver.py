@@ -40,7 +40,7 @@ class TestSpecResolver:
 
     @pytest.fixture
     def site_config(self, tmp_path):
-        """Create a minimal site-config structure for spec resolution."""
+        """Create a minimal config structure for spec resolution."""
         # Create directories
         (tmp_path / "specs").mkdir(parents=True)
         (tmp_path / "postures").mkdir(parents=True)

@@ -34,10 +34,10 @@ iac-driver has three execution contexts:
 # Clone this repo and tool repos
 git clone https://github.com/homestak-iac/iac-driver.git
 cd iac-driver
-./scripts/setup-tools.sh  # Clones ansible, tofu, packer, site-config as siblings
+./scripts/setup-tools.sh  # Clones ansible, tofu, packer, config as siblings
 
-# Setup site-config (secrets management)
-cd ../site-config
+# Setup config (secrets management)
+cd ../config
 make setup
 make decrypt
 ```
@@ -46,13 +46,13 @@ make decrypt
 
 Credentials are managed in the [config](https://github.com/homestak/config) repository using [SOPS](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age).
 
-**Discovery:** iac-driver finds site-config via `$HOMESTAK_ROOT/config` (defaults to `~/config/`).
+**Discovery:** iac-driver finds config via `$HOMESTAK_ROOT/config` (defaults to `~/config/`).
 
-**Fallback:** If `secrets.yaml` is missing (no `.enc` file to decrypt), iac-driver automatically runs `make init-secrets` in site-config, which copies from the `.example` template. This enables first-run bootstrap on fresh installations without manual secrets setup.
+**Fallback:** If `secrets.yaml` is missing (no `.enc` file to decrypt), iac-driver automatically runs `make init-secrets` in config, which copies from the `.example` template. This enables first-run bootstrap on fresh installations without manual secrets setup.
 
 **Setup:**
 ```bash
-cd ../site-config
+cd ../config
 make setup    # Configure git hooks, check dependencies
 make decrypt  # Decrypt secrets (requires age key)
 ```
@@ -66,10 +66,10 @@ make decrypt  # Decrypt secrets (requires age key)
 │   ├── src/              # Python package
 │   │   ├── cli.py        # CLI implementation
 │   │   ├── common.py     # ActionResult + shared utilities
-│   │   ├── config.py          # Host configuration (auto-discovery from site-config)
+│   │   ├── config.py          # Host configuration (auto-discovery from config)
 │   │   ├── config_apply.py    # Config phase: spec-to-ansible-vars + apply
-│   │   ├── config_resolver.py # ConfigResolver - resolves site-config for tofu
-│   │   ├── validation.py      # Preflight checks (API, SSH, site-config, images)
+│   │   ├── config_resolver.py # ConfigResolver - resolves config for tofu
+│   │   ├── validation.py      # Preflight checks (API, SSH, config, images)
 │   │   ├── manifest.py        # Manifest schema v2 (nodes graph)
 │   │   ├── manifest_opr/ # Operator engine for manifest-based orchestration
 │   │   │   ├── graph.py       # ExecutionNode, ManifestGraph, topo sort
@@ -110,14 +110,14 @@ make decrypt  # Decrypt secrets (requires age key)
 
 ## ConfigResolver
 
-The `ConfigResolver` class resolves site-config YAML files into flat configurations for tofu and ansible. All template, preset, and posture inheritance is resolved in Python, so consumers receive fully-computed values.
+The `ConfigResolver` class resolves config YAML files into flat configurations for tofu and ansible. All template, preset, and posture inheritance is resolved in Python, so consumers receive fully-computed values.
 
 ### Usage
 
 ```python
 from src.config_resolver import ConfigResolver
 
-resolver = ConfigResolver()  # Auto-discover site-config
+resolver = ConfigResolver()  # Auto-discover config
 
 # Resolve inline VM for tofu
 config = resolver.resolve_inline_vm(
@@ -330,7 +330,7 @@ PVE nodes use a hybrid model: bootstrap and config distribution pull from the pa
 
 ## Manifest-Driven Orchestration
 
-Manifests define N-level tiered PVE deployments using graph-based schema v2. Manifests are YAML files in `site-config/manifests/`.
+Manifests define N-level tiered PVE deployments using graph-based schema v2. Manifests are YAML files in `config/manifests/`.
 
 ```bash
 ./run.sh manifest apply -M n2-tiered -H srv1
@@ -368,7 +368,7 @@ Manifests define N-level tiered PVE deployments using graph-based schema v2. Man
 ## Conventions
 
 - **Remote SSH paths** use `~/iac/iac-driver` (hardcoded). This works because on target hosts `$HOME` is the workspace root. If `$HOMESTAK_ROOT` diverges from `$HOME` in the future, these paths should change to `${HOMESTAK_ROOT:-~}/iac/iac-driver`. Grep for `~/iac/iac-driver` to find all occurrences (server_mgmt.py, executor.py, vm_roundtrip.py, parallel-test.sh).
-- **`$HOMESTAK_ROOT`** defaults to `$HOME`. Used for log dir (`$HOMESTAK_ROOT/logs`), site-config (`$HOMESTAK_ROOT/config`), and repo discovery. On target hosts, `$HOME` is always the workspace root so the default is correct.
+- **`$HOMESTAK_ROOT`** defaults to `$HOME`. Used for log dir (`$HOMESTAK_ROOT/logs`), config (`$HOMESTAK_ROOT/config`), and repo discovery. On target hosts, `$HOME` is always the workspace root so the default is correct.
 - **VM IDs**: 5-digit (10000+ dev, 20000+ k8s)
 - **MAC prefix**: BC:24:11:*
 - **Hostnames**: `{cluster}{instance}` (dev1, router, kubeadm1)
@@ -377,7 +377,7 @@ Manifests define N-level tiered PVE deployments using graph-based schema v2. Man
 
 ## Host Resolution (v0.36+)
 
-The `--host` flag resolves configuration from site-config with fallback:
+The `--host` flag resolves configuration from config with fallback:
 
 | Priority | Path | Use Case |
 |----------|------|----------|
@@ -395,9 +395,9 @@ The `--host` flag resolves configuration from site-config with fallback:
 
 ## Node Configuration
 
-PVE node configuration is stored in `site-config/nodes/*.yaml`. Filename must match the actual PVE node name (`pvesh get /nodes`).
+PVE node configuration is stored in `config/nodes/*.yaml`. Filename must match the actual PVE node name (`pvesh get /nodes`).
 
-API tokens are stored separately in `site-config/secrets.yaml` and resolved by key reference:
+API tokens are stored separately in `config/secrets.yaml` and resolved by key reference:
 ```yaml
 # nodes/srv1.yaml
 host: srv1                      # FK -> hosts/srv1.yaml
@@ -530,7 +530,7 @@ Detailed architecture and design rationale:
 ## Tool Documentation
 
 Each tool repo has its own CLAUDE.md with detailed context:
-- `../bootstrap/CLAUDE.md` - curl|bash installer and homestak CLI
-- `../site-config/CLAUDE.md` - Secrets management and encryption
+- `../../bootstrap/CLAUDE.md` - curl|bash installer and homestak CLI
+- `../../config/CLAUDE.md` - Secrets management and encryption
 - `../ansible/CLAUDE.md` - Ansible-specific commands and structure
 - `../tofu/CLAUDE.md` - OpenTofu modules and environment details

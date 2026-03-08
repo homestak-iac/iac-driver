@@ -4,25 +4,25 @@ Infrastructure orchestration engine for Proxmox VE.
 
 ## Overview
 
-Manifest-driven orchestration that coordinates the [homestak-dev](https://github.com/homestak-dev) tool repositories:
+Manifest-driven orchestration that coordinates the homestak tool repositories:
 
 | Repo | Purpose |
 |------|---------|
-| [bootstrap](https://github.com/homestak-dev/bootstrap) | Entry point - curl\|bash setup |
-| [site-config](https://github.com/homestak-dev/site-config) | Site-specific secrets and configuration |
-| [ansible](https://github.com/homestak-dev/ansible) | Proxmox host configuration, PVE installation |
-| [tofu](https://github.com/homestak-dev/tofu) | VM provisioning with OpenTofu |
-| [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
+| [bootstrap](https://github.com/homestak/bootstrap) | Entry point - curl\|bash setup |
+| [config](https://github.com/homestak/config) | Site-specific secrets and configuration |
+| [ansible](https://github.com/homestak-iac/ansible) | Proxmox host configuration, PVE installation |
+| [tofu](https://github.com/homestak-iac/tofu) | VM provisioning with OpenTofu |
+| [packer](https://github.com/homestak-iac/packer) | Custom Debian cloud images |
 
 ## Quick Start
 
 ```bash
-# Clone iac-driver and site-config
-git clone https://github.com/homestak-dev/iac-driver.git
-git clone https://github.com/homestak-dev/site-config.git
+# Clone iac-driver and config
+git clone https://github.com/homestak-iac/iac-driver.git
+git clone https://github.com/homestak/config.git
 
 # Setup secrets
-cd site-config
+cd config
 make setup && make decrypt
 
 # Clone sibling tool repos
@@ -70,19 +70,19 @@ cd ../iac-driver
 
 ## Secrets Management
 
-Credentials are managed in the [site-config](https://github.com/homestak-dev/site-config) repository using SOPS + age.
+Credentials are managed in the [config](https://github.com/homestak/config) repository using SOPS + age.
 
 ```bash
-cd ../site-config
+cd ../config
 make setup    # Configure git hooks, check dependencies
 make decrypt  # Decrypt secrets (requires age key)
 ```
 
-See [site-config README](https://github.com/homestak-dev/site-config#readme) for setup instructions.
+See [config README](https://github.com/homestak/config#readme) for setup instructions.
 
 ## Prerequisites
 
-- [site-config](https://github.com/homestak-dev/site-config) set up and decrypted
+- [config](https://github.com/homestak/config) set up and decrypted
 - Ansible 2.15+ (via pipx), OpenTofu
 - SSH key at `~/.ssh/id_rsa`
 - Proxmox VE host with API access

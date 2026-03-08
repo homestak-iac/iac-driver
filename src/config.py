@@ -226,8 +226,8 @@ def get_base_dir() -> Path:
 
 
 def get_sibling_dir(name: str) -> Path:
-    """Get a sibling repo directory (ansible, tofu, packer, config)."""
-    return get_base_dir().parent / name  # iac-driver/ -> homestak/ -> ansible/
+    """Get a sibling repo directory (ansible, tofu, packer)."""
+    return get_base_dir().parent / name  # iac-driver/.parent / "ansible" = iac/ansible/
 
 
 def get_site_config_dir() -> Path:

@@ -53,7 +53,7 @@ class TestHandleSpecRequest:
 
     @pytest.fixture
     def site_config(self, tmp_path):
-        """Create a minimal site-config for spec testing."""
+        """Create a minimal config for spec testing."""
         # Create directories
         (tmp_path / "specs").mkdir(parents=True)
         (tmp_path / "postures").mkdir(parents=True)
@@ -97,7 +97,7 @@ class TestHandleSpecRequest:
 
     @pytest.fixture
     def resolver(self, site_config):
-        """Create SpecResolver with test site-config."""
+        """Create SpecResolver with test config."""
         return SpecResolver(etc_path=site_config)
 
     def test_success_returns_spec(self, resolver):
@@ -240,7 +240,7 @@ class TestHandleSpecsList:
 
     @pytest.fixture
     def site_config(self, tmp_path):
-        """Create a minimal site-config with multiple specs."""
+        """Create a minimal config with multiple specs."""
         (tmp_path / "specs").mkdir(parents=True)
         (tmp_path / "postures").mkdir(parents=True)
         (tmp_path / "site.yaml").write_text(yaml.dump({"defaults": {}}))
@@ -260,7 +260,7 @@ class TestHandleSpecsList:
 
     @pytest.fixture
     def resolver(self, site_config):
-        """Create SpecResolver with test site-config."""
+        """Create SpecResolver with test config."""
         return SpecResolver(etc_path=site_config)
 
     def test_list_specs_returns_all(self, resolver):

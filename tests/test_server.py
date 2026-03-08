@@ -82,7 +82,7 @@ class TestServer:
 
     @pytest.fixture
     def site_config(self, tmp_path):
-        """Create a minimal site-config for server testing."""
+        """Create a minimal config for server testing."""
         (tmp_path / "specs").mkdir(parents=True)
         (tmp_path / "postures").mkdir(parents=True)
 
@@ -143,8 +143,8 @@ class TestServerIntegration:
     @pytest.fixture
     def running_server(self, tmp_path):
         """Start a server and return connection details."""
-        # Create site-config
-        site_config = tmp_path / "site-config"
+        # Create config
+        site_config = tmp_path / "config"
         (site_config / "specs").mkdir(parents=True)
         (site_config / "postures").mkdir(parents=True)
 
@@ -286,7 +286,7 @@ class TestCreateServer:
 
     def test_passes_all_options(self, tmp_path):
         """create_server passes all options to constructor."""
-        # Create minimal site-config
+        # Create minimal config
         (tmp_path / "specs").mkdir(parents=True)
         (tmp_path / "site.yaml").write_text(yaml.dump({"defaults": {}}))
         (tmp_path / "secrets.yaml").write_text(yaml.dump({}))

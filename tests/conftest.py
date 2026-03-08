@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 
 def _has_infrastructure():
-    """Check if real site-config infrastructure is available."""
+    """Check if real config infrastructure is available."""
     try:
         from resolver.base import discover_etc_path
         etc_path = discover_etc_path()
@@ -28,7 +28,7 @@ def pytest_collection_modifyitems(config, items):
     """Skip tests marked with requires_infrastructure when infra not available."""
     if _has_infrastructure():
         return
-    skip_marker = pytest.mark.skip(reason="requires infrastructure (site-config with decrypted secrets)")
+    skip_marker = pytest.mark.skip(reason="requires infrastructure (config with decrypted secrets)")
     for item in items:
         if "requires_infrastructure" in item.keywords:
             item.add_marker(skip_marker)
@@ -36,9 +36,9 @@ def pytest_collection_modifyitems(config, items):
 
 @pytest.fixture
 def site_config_dir(tmp_path):
-    """Create temporary site-config directory structure.
+    """Create temporary config directory structure.
 
-    Creates minimal site-config with:
+    Creates minimal config with:
     - site.yaml (defaults)
     - secrets.yaml (mock secrets)
     - nodes/test-node.yaml

@@ -106,7 +106,7 @@ if [[ ${#MANIFESTS[@]} -eq 0 ]]; then
     exit 2
 fi
 
-# Resolve SSH host, user, and port from site-config
+# Resolve SSH host, user, and port from config
 read -r SSH_HOST SSH_USER PORT < <(
     cd "$BASE_DIR/src" && python3 -c "
 from config import load_host_config

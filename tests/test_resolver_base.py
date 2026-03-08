@@ -57,7 +57,7 @@ class TestResolverBase:
 
     @pytest.fixture
     def site_config(self, tmp_path):
-        """Create a minimal site-config structure."""
+        """Create a minimal config structure."""
         # Create directories
         (tmp_path / "postures").mkdir(parents=True)
 
