@@ -27,10 +27,10 @@ from common import run_command
 logger = logging.getLogger(__name__)
 
 # Platform-ready marker path (resolved at runtime via _discover_state_path)
-MARKER_PATH = Path.home() / 'etc' / 'state' / 'config-complete.json'
+MARKER_PATH = Path.home() / 'config' / 'state' / 'config-complete.json'
 
 # Default spec path (written by `homestak spec get`)
-DEFAULT_SPEC_PATH = Path.home() / 'etc' / 'state' / 'spec.yaml'
+DEFAULT_SPEC_PATH = Path.home() / 'config' / 'state' / 'spec.yaml'
 
 
 class ConfigError(Exception):
@@ -49,38 +49,31 @@ class ConfigResult:
     users_count: int = 0
 
 
+def _get_root() -> Path:
+    """Return the homestak root directory."""
+    return Path(os.environ.get('HOMESTAK_ROOT', str(Path.home())))
+
+
 def _discover_state_path() -> Path:
     """Discover the homestak state directory.
 
-    Resolution order:
-    1. $HOMESTAK_ETC/state/
-    2. ~/etc/state/ (user-owned)
+    Derived from $HOMESTAK_ROOT/config/state.
     """
-    if env_path := os.environ.get('HOMESTAK_ETC'):
-        return Path(env_path) / 'state'
-
-    return Path.home() / 'etc' / 'state'
+    return _get_root() / 'config' / 'state'
 
 
 def _discover_ansible_dir() -> Path:
     """Discover the ansible directory.
 
-    Resolution order:
-    1. $HOMESTAK_LIB/ansible/ (env override)
-    2. ~/lib/ansible/ (user-owned)
-
-    Dev environments should set HOMESTAK_LIB explicitly.
+    Derived from $HOMESTAK_ROOT/iac/ansible.
     """
-    if env_path := os.environ.get('HOMESTAK_LIB'):
-        return Path(env_path) / 'ansible'
-
-    home_ansible = Path.home() / 'lib' / 'ansible'
-    if home_ansible.exists():
-        return home_ansible
+    ansible_dir = _get_root() / 'iac' / 'ansible'
+    if ansible_dir.exists():
+        return ansible_dir
 
     raise ConfigError(
-        "Ansible directory not found. "
-        "Set HOMESTAK_LIB or ensure ansible is installed."
+        f"Ansible directory not found at {ansible_dir}. "
+        "Set HOMESTAK_ROOT to your workspace root directory."
     )
 
 

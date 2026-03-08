@@ -2,7 +2,7 @@
 """Tests for config.py - host configuration and discovery.
 
 Tests verify:
-1. Site-config directory discovery (env var, sibling, ~/etc)
+1. Site-config directory discovery (HOMESTAK_ROOT)
 2. Host listing (YAML nodes)
 3. Host config loading with secrets resolution
 4. HostConfig dataclass behavior
@@ -33,90 +33,34 @@ from config import (
 class TestGetSiteConfigDir:
     """Test site-config discovery logic."""
 
-    def test_env_var_takes_precedence(self, tmp_path):
-        """HOMESTAK_SITE_CONFIG env var should take precedence."""
-        env_dir = tmp_path / 'env-config'
-        env_dir.mkdir()
+    def test_homestak_root_env_var(self, tmp_path):
+        """HOMESTAK_ROOT env var derives config path."""
+        config_dir = tmp_path / 'config'
+        config_dir.mkdir()
 
-        with patch.dict(os.environ, {'HOMESTAK_SITE_CONFIG': str(env_dir)}):
+        with patch.dict(os.environ, {'HOMESTAK_ROOT': str(tmp_path)}):
             result = get_site_config_dir()
-            assert result == env_dir
+            assert result == config_dir
 
-    def test_env_var_missing_raises(self, tmp_path):
-        """Non-existent env var path should raise ConfigError."""
-        with patch.dict(os.environ, {'HOMESTAK_SITE_CONFIG': '/nonexistent/path'}):
-            with pytest.raises(ConfigError) as exc_info:
-                get_site_config_dir()
-            assert 'does not exist' in str(exc_info.value)
-
-    def test_sibling_dir_fallback(self, tmp_path):
-        """Should find sibling site-config directory."""
-        # Create fake sibling structure
-        iac_driver = tmp_path / 'iac-driver'
-        iac_driver.mkdir()
-        site_config = tmp_path / 'site-config'
-        site_config.mkdir()
+    def test_home_fallback(self, tmp_path):
+        """Falls back to $HOME/config when HOMESTAK_ROOT not set."""
+        config_dir = tmp_path / 'config'
+        config_dir.mkdir()
 
         with patch.dict(os.environ, {}, clear=True):
-            # Remove env var if present
-            os.environ.pop('HOMESTAK_SITE_CONFIG', None)
-
-            with patch('config.get_base_dir', return_value=iac_driver):
+            os.environ.pop('HOMESTAK_ROOT', None)
+            with patch('pathlib.Path.home', return_value=tmp_path):
                 result = get_site_config_dir()
-                assert result == site_config
-
-    def test_home_etc_path_fallback(self, tmp_path):
-        """Should find ~/etc path when sibling not found."""
-        iac_driver = tmp_path / 'iac-driver'
-        iac_driver.mkdir()
-
-        # No sibling, simulate ~/etc path
-        with patch.dict(os.environ, {}, clear=True):
-            os.environ.pop('HOMESTAK_SITE_CONFIG', None)
-
-            with patch('config.get_base_dir', return_value=iac_driver), \
-                 patch('pathlib.Path.exists') as mock_exists:
-                # Sibling doesn't exist, ~/etc does
-                def exists_side_effect(self=None):
-                    path_str = str(self) if self else ''
-                    if path_str.endswith('/etc') and '/home/' in path_str:
-                        return True
-                    if 'site-config' in path_str:
-                        return False
-                    return False
-
-                mock_exists.side_effect = exists_side_effect
-
-                # This test is tricky due to Path.exists being called on instances
-                # Skip detailed mock - the logic is tested via integration
+                assert result == config_dir
 
     def test_no_config_raises(self, tmp_path):
-        """Should raise ConfigError when no site-config found."""
-        # Create an isolated directory with no site-config anywhere
-        isolated = tmp_path / 'isolated' / 'iac-driver'
-        isolated.mkdir(parents=True)
-
-        with patch.dict(os.environ, {}, clear=True):
-            os.environ.pop('HOMESTAK_SITE_CONFIG', None)
-
-            # Mock get_base_dir to return our isolated directory
-            # This ensures the sibling check fails
-            with patch('config.get_base_dir', return_value=isolated):
-                # Also need to mock Path.exists for ~/etc path
-                original_exists = Path.exists
-
-                def mock_exists(self):
-                    path_str = str(self)
-                    # Return False for ~/etc path
-                    if path_str.endswith('/etc') and '/home/' in path_str:
-                        return False
-                    # Use real exists for other paths (tmp_path structure)
-                    return original_exists(self)
-
-                with patch.object(Path, 'exists', mock_exists):
-                    with pytest.raises(ConfigError) as exc_info:
-                        get_site_config_dir()
-                    assert 'not found' in str(exc_info.value)
+        """Should raise ConfigError when config dir doesn't exist."""
+        # Point to a root with no config/ subdirectory
+        with patch.dict(os.environ, {'HOMESTAK_ROOT': str(tmp_path)}, clear=True):
+            with pytest.raises(ConfigError) as exc_info:
+                get_site_config_dir()
+            assert 'not found' in str(exc_info.value)
+            assert 'HOMESTAK_ROOT' in str(exc_info.value)
 
 
 class TestListHosts:

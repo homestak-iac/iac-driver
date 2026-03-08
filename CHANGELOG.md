@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed
+- Replace `HOMESTAK_SITE_CONFIG`, `HOMESTAK_LIB`, `HOMESTAK_ETC` with single `HOMESTAK_ROOT` anchor (#312)
+  - `get_homestak_root()` replaces `get_homestak_lib()` and `get_homestak_etc()` in `common.py`
+  - All paths derived: `$HOMESTAK_ROOT/config`, `$HOMESTAK_ROOT/iac/ansible`
+  - `get_site_config_dir()`, `discover_etc_path()`, `discover_state_path()` simplified
+  - Default: `$HOME` (on installed hosts, `$HOME` = workspace root)
+
 ## v0.53 - 2026-03-06
 
 ### Changed

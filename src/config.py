@@ -233,31 +233,17 @@ def get_sibling_dir(name: str) -> Path:
 def get_site_config_dir() -> Path:
     """Discover site-config directory.
 
-    Resolution order:
-    1. $HOMESTAK_SITE_CONFIG environment variable
-    2. ../site-config/ sibling directory (dev workspace)
-    3. ~/etc/ (user-owned homestak)
+    Derived from $HOMESTAK_ROOT/config. On installed hosts, $HOME is the
+    workspace root (default). On dev workstations, set HOMESTAK_ROOT explicitly.
     """
-    # 1. Environment variable (highest priority)
-    if env_path := os.environ.get('HOMESTAK_SITE_CONFIG'):
-        path = Path(env_path)
-        if path.exists():
-            return path
-        raise ConfigError(f"HOMESTAK_SITE_CONFIG={env_path} does not exist")
-
-    # 2. Sibling directory (dev workspace)
-    sibling = get_base_dir().parent / 'site-config'
-    if sibling.exists():
-        return sibling
-
-    # 3. User-owned path (~homestak/etc/)
-    home_etc = Path.home() / 'etc'
-    if home_etc.exists():
-        return home_etc
+    root = Path(os.environ.get('HOMESTAK_ROOT', str(Path.home())))
+    config_dir = root / 'config'
+    if config_dir.exists():
+        return config_dir
 
     raise ConfigError(
-        "site-config not found. "
-        "Set HOMESTAK_SITE_CONFIG or clone site-config as sibling directory."
+        f"site-config not found at {config_dir}. "
+        "Set HOMESTAK_ROOT to your workspace root directory."
     )
 
 
