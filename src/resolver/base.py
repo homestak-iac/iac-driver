@@ -61,11 +61,8 @@ class SecretsNotFoundError(ResolverError):
 def discover_etc_path() -> Path:
     """Discover the site-config path.
 
-    Resolution order:
-    1. HOMESTAK_ETC environment variable
-    2. HOMESTAK_SITE_CONFIG environment variable (alias)
-    3. ../site-config/ sibling (dev workspace)
-    4. ~/etc/ (user-owned homestak)
+    Derived from $HOMESTAK_ROOT/config. On installed hosts, $HOME is the
+    workspace root (default). On dev workstations, set HOMESTAK_ROOT explicitly.
 
     Returns:
         Path to site-config directory
@@ -73,34 +70,15 @@ def discover_etc_path() -> Path:
     Raises:
         ResolverError: If no valid path found
     """
-    # Check environment variables first
-    for env_var in ("HOMESTAK_ETC", "HOMESTAK_SITE_CONFIG"):
-        if env_path := os.environ.get(env_var):
-            path = Path(env_path)
-            if path.is_dir():
-                return path
-
-    # Check sibling directory (dev workspace)
-    # Works from both src/ and src/resolver/
-    script_dir = Path(__file__).resolve().parent
-    # Try both: parent/../site-config (from resolver/) and parent/../../site-config (from src/)
-    for parent_levels in range(1, 4):
-        base = script_dir
-        for _ in range(parent_levels):
-            base = base.parent
-        sibling = base / "site-config"
-        if sibling.is_dir():
-            return sibling
-
-    # Check user-owned path (~homestak/etc/)
-    home_etc = Path.home() / "etc"
-    if home_etc.is_dir():
-        return home_etc
+    root = Path(os.environ.get("HOMESTAK_ROOT", str(Path.home())))
+    config_dir = root / "config"
+    if config_dir.is_dir():
+        return config_dir
 
     raise ResolverError(
         "E500",
-        "Cannot find site-config directory. "
-        "Set HOMESTAK_ETC or clone site-config as sibling directory."
+        f"Cannot find site-config directory at {config_dir}. "
+        "Set HOMESTAK_ROOT to your workspace root directory."
     )
 
 

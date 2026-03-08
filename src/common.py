@@ -16,14 +16,18 @@ def sudo_prefix(user: str) -> str:
     return '' if user == 'root' else 'sudo '
 
 
-def get_homestak_lib() -> Path:
-    """Return the homestak lib directory (code repos)."""
-    return Path(os.environ.get('HOMESTAK_LIB', Path.home() / 'lib'))
+def get_homestak_root() -> Path:
+    """Return the homestak root directory.
 
+    All component paths are derived from this single anchor:
+    - config:    $HOMESTAK_ROOT/config
+    - iac repos: $HOMESTAK_ROOT/iac/<repo>
+    - bootstrap: $HOMESTAK_ROOT/bootstrap
 
-def get_homestak_etc() -> Path:
-    """Return the homestak etc directory (site-config)."""
-    return Path(os.environ.get('HOMESTAK_ETC', Path.home() / 'etc'))
+    On installed hosts, $HOME IS the workspace root (default).
+    On dev workstations, set HOMESTAK_ROOT=~/homestak.
+    """
+    return Path(os.environ.get('HOMESTAK_ROOT', Path.home()))
 
 
 @dataclass

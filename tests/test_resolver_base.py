@@ -25,39 +25,26 @@ from resolver.base import (
 class TestDiscoverEtcPath:
     """Tests for discover_etc_path()."""
 
-    def test_env_var_homestak_etc(self, tmp_path):
-        """HOMESTAK_ETC env var takes priority."""
-        with patch.dict(os.environ, {"HOMESTAK_ETC": str(tmp_path)}):
-            assert discover_etc_path() == tmp_path
+    def test_homestak_root_env_var(self, tmp_path):
+        """HOMESTAK_ROOT env var derives config path."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        with patch.dict(os.environ, {"HOMESTAK_ROOT": str(tmp_path)}, clear=True):
+            assert discover_etc_path() == config_dir
 
-    def test_env_var_homestak_site_config(self, tmp_path):
-        """HOMESTAK_SITE_CONFIG env var is alias for HOMESTAK_ETC."""
-        with patch.dict(os.environ, {"HOMESTAK_SITE_CONFIG": str(tmp_path)}, clear=True):
-            # Clear HOMESTAK_ETC to test fallback
-            os.environ.pop("HOMESTAK_ETC", None)
-            assert discover_etc_path() == tmp_path
-
-    def test_home_etc_path(self, tmp_path):
-        """~/etc path is checked as fallback."""
-        home_etc = Path.home() / "etc"
+    def test_home_fallback(self, tmp_path):
+        """Falls back to $HOME/config when HOMESTAK_ROOT not set."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
         with patch.dict(os.environ, {}, clear=True):
-            os.environ.pop("HOMESTAK_ETC", None)
-            os.environ.pop("HOMESTAK_SITE_CONFIG", None)
-            with patch.object(Path, "is_dir") as mock_is_dir:
-                # Mock ~/etc to exist
-                def is_dir_side_effect(self=None):
-                    if self is None:
-                        return False
-                    return str(self) == str(home_etc)
-                mock_is_dir.side_effect = is_dir_side_effect
-                # This test would need more complex mocking to work properly
-                # Skipping actual assertion due to mocking complexity
+            os.environ.pop("HOMESTAK_ROOT", None)
+            with patch("pathlib.Path.home", return_value=tmp_path):
+                assert discover_etc_path() == config_dir
 
     def test_no_path_found_raises_error(self):
-        """ResolverError raised when no path found."""
+        """ResolverError raised when config dir doesn't exist."""
         with patch.dict(os.environ, {}, clear=True):
-            os.environ.pop("HOMESTAK_ETC", None)
-            os.environ.pop("HOMESTAK_SITE_CONFIG", None)
+            os.environ.pop("HOMESTAK_ROOT", None)
             with patch.object(Path, "is_dir", return_value=False):
                 with pytest.raises(ResolverError) as exc_info:
                     discover_etc_path()
@@ -122,10 +109,22 @@ class TestResolverBase:
         assert resolver.etc_path == site_config
 
     def test_init_auto_discover(self, site_config):
-        """ResolverBase auto-discovers path from env var."""
-        with patch.dict(os.environ, {"HOMESTAK_ETC": str(site_config)}):
+        """ResolverBase auto-discovers path from HOMESTAK_ROOT."""
+        # site_config fixture is already the config dir, so root is its parent
+        root = site_config.parent
+        config_dir = root / "config"
+        config_dir.mkdir(exist_ok=True)
+        # Copy fixture contents to config_dir
+        import shutil
+        for item in site_config.iterdir():
+            dest = config_dir / item.name
+            if item.is_dir():
+                shutil.copytree(item, dest, dirs_exist_ok=True)
+            else:
+                shutil.copy2(item, dest)
+        with patch.dict(os.environ, {"HOMESTAK_ROOT": str(root)}, clear=True):
             resolver = ResolverBase()
-            assert resolver.etc_path == site_config
+            assert resolver.etc_path == config_dir
 
     def test_load_yaml(self, site_config):
         """_load_yaml loads YAML file."""

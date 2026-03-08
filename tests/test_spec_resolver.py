@@ -133,10 +133,20 @@ class TestSpecResolver:
         assert resolver.etc_path == site_config
 
     def test_init_auto_discover(self, site_config):
-        """SpecResolver auto-discovers path from env var."""
-        with patch.dict(os.environ, {"HOMESTAK_ETC": str(site_config)}):
+        """SpecResolver auto-discovers path from HOMESTAK_ROOT."""
+        import shutil
+        root = site_config.parent
+        config_dir = root / "config"
+        config_dir.mkdir(exist_ok=True)
+        for item in site_config.iterdir():
+            dest = config_dir / item.name
+            if item.is_dir():
+                shutil.copytree(item, dest, dirs_exist_ok=True)
+            else:
+                shutil.copy2(item, dest)
+        with patch.dict(os.environ, {"HOMESTAK_ROOT": str(root)}, clear=True):
             resolver = SpecResolver()
-            assert resolver.etc_path == site_config
+            assert resolver.etc_path == config_dir
 
     def test_list_specs(self, site_config):
         """list_specs returns available spec names."""
