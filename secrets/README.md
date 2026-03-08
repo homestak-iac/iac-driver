@@ -2,26 +2,26 @@
 
 **This directory is deprecated.**
 
-Secrets are now managed in the [site-config](https://github.com/homestak-dev/site-config) repository.
+Secrets are now managed in the [config](https://github.com/homestak/config) repository.
 
 ## Migration
 
 Host credentials have moved to:
 ```
-site-config/hosts/{hostname}.tfvars
+config/hosts/{hostname}.tfvars
 ```
 
 ## Setup
 
 ```bash
-# Clone site-config as sibling
+# Clone config
 cd ..
-git clone https://github.com/homestak-dev/site-config.git
+git clone https://github.com/homestak/config.git
 
 # Setup and decrypt
-cd site-config
+cd config
 make setup
 make decrypt
 ```
 
-The iac-driver will automatically discover `../site-config/` as a sibling directory.
+The iac-driver will automatically discover config via `$HOMESTAK_ROOT/config`.

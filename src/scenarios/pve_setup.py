@@ -203,7 +203,7 @@ class _GenerateNodeConfigPhase:
         except Exception as e:
             return ActionResult(
                 success=False,
-                message=f"Cannot find site-config: {e}",
+                message=f"Cannot find config: {e}",
                 duration=time.time() - start
             )
 
@@ -257,7 +257,7 @@ class _CreateApiTokenPhase:
         except Exception as e:
             return ActionResult(
                 success=False,
-                message=f"Cannot find site-config: {e}",
+                message=f"Cannot find config: {e}",
                 duration=time.time() - start
             )
 

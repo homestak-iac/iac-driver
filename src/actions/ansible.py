@@ -57,15 +57,15 @@ class AnsiblePlaybookAction:
                     duration=time.time() - start
                 )
 
-        # Resolve site-config vars if enabled
+        # Resolve config vars if enabled
         resolved_vars = {}
         if self.use_site_config and self.env:
             try:
                 resolver = ConfigResolver()
                 resolved_vars = resolver.resolve_ansible_vars(self.env)
-                logger.info(f"[{self.name}] Resolved site-config vars for env '{self.env}'")
+                logger.info(f"[{self.name}] Resolved config vars for env '{self.env}'")
             except Exception as e:
-                logger.warning(f"[{self.name}] Failed to resolve site-config: {e}")
+                logger.warning(f"[{self.name}] Failed to resolve config: {e}")
 
         # Build command
         logger.info(f"[{self.name}] Running {self.playbook} on {target_host}...")
@@ -77,7 +77,7 @@ class AnsiblePlaybookAction:
             '-e', f'ansible_user={config.ssh_user}'
         ]
 
-        # Add resolved site-config vars first (extra_vars can override)
+        # Add resolved config vars first (extra_vars can override)
         for key, value in resolved_vars.items():
             if isinstance(value, (list, dict)):
                 import json
@@ -87,7 +87,7 @@ class AnsiblePlaybookAction:
             else:
                 cmd.extend(['-e', f'{key}={value}'])
 
-        # Add extra vars (these override site-config)
+        # Add extra vars (these override config)
         for key, value in self.extra_vars.items():
             cmd.extend(['-e', f'{key}={value}'])
 
@@ -142,15 +142,15 @@ class AnsibleLocalPlaybookAction:
                 duration=time.time() - start
             )
 
-        # Resolve site-config vars if enabled
+        # Resolve config vars if enabled
         resolved_vars = {}
         if self.use_site_config and self.env:
             try:
                 resolver = ConfigResolver()
                 resolved_vars = resolver.resolve_ansible_vars(self.env)
-                logger.info(f"[{self.name}] Resolved site-config vars for env '{self.env}'")
+                logger.info(f"[{self.name}] Resolved config vars for env '{self.env}'")
             except Exception as e:
-                logger.warning(f"[{self.name}] Failed to resolve site-config: {e}")
+                logger.warning(f"[{self.name}] Failed to resolve config: {e}")
 
         # Build command
         logger.info(f"[{self.name}] Running {self.playbook} locally...")
@@ -160,7 +160,7 @@ class AnsibleLocalPlaybookAction:
             self.playbook,
         ]
 
-        # Add resolved site-config vars first (extra_vars can override)
+        # Add resolved config vars first (extra_vars can override)
         for key, value in resolved_vars.items():
             if isinstance(value, (list, dict)):
                 import json
@@ -170,7 +170,7 @@ class AnsibleLocalPlaybookAction:
             else:
                 cmd.extend(['-e', f'{key}={value}'])
 
-        # Add extra vars (these override site-config)
+        # Add extra vars (these override config)
         for key, value in self.extra_vars.items():
             cmd.extend(['-e', f'{key}={value}'])
 

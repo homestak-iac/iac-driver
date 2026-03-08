@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for manifest validate verb — FK validation against site-config.
+"""Tests for manifest validate verb — FK validation against config.
 
 Tests verify:
 1. Valid manifests pass validation
@@ -23,7 +23,7 @@ from manifest_opr.cli import validate_manifest_fks
 
 
 def _make_site_config(tmp_path, specs=None, presets=None):
-    """Create a mock site-config directory with specs and presets."""
+    """Create a mock config directory with specs and presets."""
     specs_dir = tmp_path / 'specs'
     specs_dir.mkdir()
     presets_dir = tmp_path / 'presets'

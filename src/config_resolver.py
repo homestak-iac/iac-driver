@@ -1,6 +1,6 @@
-"""Config resolution for site-config YAML files.
+"""Config resolution for config YAML files.
 
-Resolves site-config entities (site, secrets, nodes, presets, postures) into
+Resolves config entities (site, secrets, nodes, presets, postures) into
 flat configurations suitable for tofu and ansible. All preset
 inheritance is resolved here, so consumers receive fully-computed values.
 
@@ -38,13 +38,13 @@ from config import ConfigError, get_site_config_dir, _parse_yaml, _load_secrets
 
 
 class ConfigResolver:
-    """Resolves site-config YAML into flat VM specs for tofu."""
+    """Resolves config YAML into flat VM specs for tofu."""
 
     def __init__(self, site_config_path: Optional[str] = None):
-        """Initialize resolver with site-config path.
+        """Initialize resolver with config path.
 
         Args:
-            site_config_path: Path to site-config directory. If None, uses
+            site_config_path: Path to config directory. If None, uses
                               auto-discovery (env var, sibling, ~/etc).
         """
         if yaml is None:
@@ -61,7 +61,7 @@ class ConfigResolver:
         self.postures = self._load_dir("postures")
 
     def _load_yaml(self, relative_path: str) -> dict:
-        """Load a YAML file from site-config directory."""
+        """Load a YAML file from config directory."""
         path = self.path / relative_path
         if not path.exists():
             return {}
@@ -172,7 +172,7 @@ class ConfigResolver:
         if 'datastore' not in node_config:
             raise ConfigError(
                 f"Node '{node}' missing required 'datastore' in nodes/{node}.yaml. "
-                f"Run 'make node-config FORCE=1' in site-config to regenerate."
+                f"Run 'make node-config FORCE=1' in config to regenerate."
             )
 
         # Resolve API token from secrets

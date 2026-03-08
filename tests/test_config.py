@@ -31,7 +31,7 @@ from config import (
 
 
 class TestGetSiteConfigDir:
-    """Test site-config discovery logic."""
+    """Test config discovery logic."""
 
     def test_homestak_root_env_var(self, tmp_path):
         """HOMESTAK_ROOT env var derives config path."""
@@ -64,7 +64,7 @@ class TestGetSiteConfigDir:
 
 
 class TestListHosts:
-    """Test host listing from site-config."""
+    """Test host listing from config."""
 
     def test_lists_yaml_nodes(self, tmp_path):
         """Should list nodes from nodes/*.yaml."""

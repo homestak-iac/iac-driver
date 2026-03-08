@@ -31,7 +31,7 @@ def _common_parser(verb: str) -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--manifest', '-M',
-        help='Manifest name from site-config/manifests/',
+        help='Manifest name from config/manifests/',
     )
     parser.add_argument(
         '--manifest-file',
@@ -435,7 +435,7 @@ def test_main(argv: list) -> int:
 def validate_main(argv: list) -> int:
     """Handle 'manifest validate' verb.
 
-    Validates manifest structure and FK references against site-config:
+    Validates manifest structure and FK references against config:
     - Schema and graph validation (existing _validate_graph)
     - spec FK: specs/{value}.yaml exists
     - preset FK: presets/{value}.yaml exists
@@ -446,7 +446,7 @@ def validate_main(argv: list) -> int:
     )
     parser.add_argument(
         '--manifest', '-M',
-        help='Manifest name from site-config/manifests/',
+        help='Manifest name from config/manifests/',
     )
     parser.add_argument(
         '--manifest-file',
@@ -504,7 +504,7 @@ def validate_main(argv: list) -> int:
 
 
 def validate_manifest_fks(manifest, site_config_dir) -> list[str]:
-    """Validate FK references in manifest nodes against site-config.
+    """Validate FK references in manifest nodes against config.
 
     Checks:
     - spec: X → specs/X.yaml exists
@@ -512,7 +512,7 @@ def validate_manifest_fks(manifest, site_config_dir) -> list[str]:
 
     Args:
         manifest: Loaded Manifest instance
-        site_config_dir: Path to site-config directory
+        site_config_dir: Path to config directory
 
     Returns:
         List of error messages (empty = valid)

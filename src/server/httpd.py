@@ -202,7 +202,7 @@ class Server:
         if self.spec_resolver is None:
             try:
                 self.spec_resolver = SpecResolver()
-                logger.info("Using site-config at: %s", self.spec_resolver.etc_path)
+                logger.info("Using config at: %s", self.spec_resolver.etc_path)
             except ResolverError as e:
                 logger.error("Failed to initialize resolver: %s", e.message)
                 raise RuntimeError(f"Resolver init failed: {e.message}") from e

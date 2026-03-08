@@ -137,7 +137,7 @@ class TestCopySecretsAction:
         from actions.pve_lifecycle import CopySecretsAction
 
         # Setup: secrets.yaml exists at mocked path, scp succeeds, ssh succeeds
-        mock_dir.return_value = Path('/tmp/test-site-config')
+        mock_dir.return_value = Path('/tmp/test-config')
         mock_sub.run.return_value = MagicMock(returncode=0)
         mock_ssh.return_value = (0, '', '')
 
@@ -146,7 +146,7 @@ class TestCopySecretsAction:
         config.automation_user = 'homestak'
 
         # Create a temporary secrets.yaml so exists() returns True
-        secrets = Path('/tmp/test-site-config/secrets.yaml')
+        secrets = Path('/tmp/test-config/secrets.yaml')
         secrets.parent.mkdir(parents=True, exist_ok=True)
         secrets.write_text('test: true')
         try:

@@ -60,7 +60,7 @@ def _parse_host_arg(value: str) -> tuple[str | None, str]:
 
 
 def _create_ip_config(ip: str, ssh_user: str | None = None):
-    """Create a HostConfig for a raw IP address (no site-config lookup)."""
+    """Create a HostConfig for a raw IP address (no config lookup)."""
     from config import HostConfig
     config = HostConfig(name=ip, config_file=Path('/dev/null'))
     config.ssh_host = ip
@@ -305,7 +305,7 @@ def _resolve_host(args, scenario, available_hosts):
             print(f"Error: Could not auto-detect host. Hostname '{hostname}' not in available hosts.")
             print(f"Available hosts: {', '.join(available_hosts) if available_hosts else 'none configured'}")
             print("\nEither:")
-            print(f"  1. Create nodes/{hostname}.yaml in site-config")
+            print(f"  1. Create nodes/{hostname}.yaml in config")
             print("  2. Specify --host explicitly")
             return (None, 1)
 
@@ -327,7 +327,7 @@ def _resolve_host(args, scenario, available_hosts):
     if is_raw_ip:
         assert host is not None  # guaranteed by _is_ip_address check
         config = _create_ip_config(host, ssh_user=ssh_user_override)
-        logger.info(f"Using raw IP: {host} (no site-config lookup)")
+        logger.info(f"Using raw IP: {host} (no config lookup)")
     elif host:
         config = load_host_config(host)
     else:
@@ -474,7 +474,7 @@ def main():
     )
     parser.add_argument(
         '--host', '-H',
-        help=f'Target host: named host from site-config or raw IP. Available: {", ".join(available_hosts) if available_hosts else "none configured"}'
+        help=f'Target host: named host from config or raw IP. Available: {", ".join(available_hosts) if available_hosts else "none configured"}'
     )
     parser.add_argument(
         '--report-dir', '-r',
@@ -565,7 +565,7 @@ def main():
     # Manifest arguments for recursive-pve scenarios
     parser.add_argument(
         '--manifest', '-M',
-        help='Manifest name from site-config/manifests/ (for recursive-pve scenarios)'
+        help='Manifest name from config/manifests/ (for recursive-pve scenarios)'
     )
     parser.add_argument(
         '--manifest-file',

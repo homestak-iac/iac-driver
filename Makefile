@@ -14,10 +14,10 @@ help:
 	@echo "  make lint          - Run pre-commit hooks (pylint, mypy)"
 	@echo ""
 	@echo "Secrets Management:"
-	@echo "  Secrets are managed in the site-config repository."
-	@echo "  See: ../site-config/ or https://github.com/homestak-dev/site-config"
+	@echo "  Secrets are managed in the config repository."
+	@echo "  See: ../config/ or https://github.com/homestak/config"
 	@echo ""
-	@echo "  cd ../site-config && make decrypt"
+	@echo "  cd ../config && make decrypt"
 
 install-deps:
 	@echo "Installing iac-driver dependencies..."

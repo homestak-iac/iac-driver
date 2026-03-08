@@ -5,7 +5,7 @@ These tests verify the CLI properly handles:
 1. requires_root check for --local mode
 2. requires_host_config for auto-detect host
 
-Some tests require site-config with configured hosts and are marked
+Some tests require config with configured hosts and are marked
 with @pytest.mark.requires_infrastructure - these are skipped in CI.
 """
 
@@ -19,7 +19,7 @@ import pytest
 # Path to run.sh
 RUN_SH = Path(__file__).parent.parent / 'run.sh'
 
-# Marker for tests that require site-config/infrastructure
+# Marker for tests that require config/infrastructure
 requires_infrastructure = pytest.mark.requires_infrastructure
 
 

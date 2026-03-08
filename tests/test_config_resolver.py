@@ -79,7 +79,7 @@ class TestWriteTfvars:
 
     def test_write_tfvars_creates_valid_json(self, tmp_path):
         """write_tfvars should create valid JSON file."""
-        # Create minimal site-config
+        # Create minimal config
         (tmp_path / 'nodes').mkdir()
 
         (tmp_path / 'presets').mkdir()
@@ -127,7 +127,7 @@ class TestListMethods:
 
 
 class TestResolveAnsibleVars:
-    """Test ansible variable resolution from site-config."""
+    """Test ansible variable resolution from config."""
 
     # Uses site_config_dir from conftest.py
 
