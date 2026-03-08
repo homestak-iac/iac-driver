@@ -8,11 +8,11 @@ This repo provides scenario-based workflows that coordinate the tool repositorie
 
 | Repo | Purpose | URL |
 |------|---------|-----|
-| bootstrap | Entry point, curl\|bash installer | https://github.com/homestak-dev/bootstrap |
-| site-config | Site-specific secrets and configuration | https://github.com/homestak-dev/site-config |
-| ansible | Proxmox host configuration, PVE installation | https://github.com/homestak-dev/ansible |
-| tofu | VM provisioning with OpenTofu | https://github.com/homestak-dev/tofu |
-| packer | Custom Debian cloud image building | https://github.com/homestak-dev/packer |
+| bootstrap | Entry point, curl\|bash installer | https://github.com/homestak/bootstrap |
+| config | Site-specific secrets and configuration | https://github.com/homestak/config |
+| ansible | Proxmox host configuration, PVE installation | https://github.com/homestak-iac/ansible |
+| tofu | VM provisioning with OpenTofu | https://github.com/homestak-iac/tofu |
+| packer | Custom Debian cloud image building | https://github.com/homestak-iac/packer |
 
 ## Execution Models
 
@@ -32,7 +32,7 @@ iac-driver has three execution contexts:
 
 ```bash
 # Clone this repo and tool repos
-git clone https://github.com/homestak-dev/iac-driver.git
+git clone https://github.com/homestak-iac/iac-driver.git
 cd iac-driver
 ./scripts/setup-tools.sh  # Clones ansible, tofu, packer, site-config as siblings
 
@@ -44,7 +44,7 @@ make decrypt
 
 ## Secrets Management
 
-Credentials are managed in the [site-config](https://github.com/homestak-dev/site-config) repository using [SOPS](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age).
+Credentials are managed in the [config](https://github.com/homestak/config) repository using [SOPS](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age).
 
 **Discovery:** iac-driver finds site-config via:
 1. `$HOMESTAK_SITE_CONFIG` environment variable
