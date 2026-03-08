@@ -40,7 +40,7 @@ def validate_api_token(api_endpoint: str, api_token: str, node_name: str) -> lis
     if not api_endpoint:
         errors.append(
             f"API endpoint not configured for node '{node_name}'\n"
-            f"  Add 'api_endpoint' to site-config/nodes/{node_name}.yaml"
+            f"  Add 'api_endpoint' to config/nodes/{node_name}.yaml"
         )
         return errors
 
@@ -48,7 +48,7 @@ def validate_api_token(api_endpoint: str, api_token: str, node_name: str) -> lis
     if not api_token:
         errors.append(
             f"API token not found for node '{node_name}'\n"
-            f"  Ensure secrets.yaml is decrypted: cd ../site-config && make decrypt\n"
+            f"  Ensure secrets.yaml is decrypted: cd ../config && make decrypt\n"
             f"  Ensure token exists: secrets.api_tokens.{node_name}"
         )
         return errors
@@ -75,7 +75,7 @@ def validate_api_token(api_endpoint: str, api_token: str, node_name: str) -> lis
             errors.append(
                 f"API token invalid for node '{node_name}'\n"
                 f"  Regenerate: pveum user token add root@pam homestak --privsep 0\n"
-                f"  Then update secrets.yaml and run: cd ../site-config && make encrypt"
+                f"  Then update secrets.yaml and run: cd ../config && make encrypt"
             )
         elif resp.status_code != 200:
             errors.append(
@@ -228,10 +228,10 @@ def validate_bootstrap_installed() -> list[str]:
     errors = []
     lib_path, etc_path = get_homestak_paths()
 
-    # Check site-config exists
+    # Check config exists
     if not etc_path.exists():
         errors.append(
-            f"Bootstrap not complete - site-config not found\n"
+            f"Bootstrap not complete - config not found\n"
             f"  Expected: {etc_path}\n"
             f"  Run: curl -fsSL https://raw.githubusercontent.com/homestak/bootstrap/master/install | bash"
         )

@@ -1,6 +1,6 @@
 """Host configuration management.
 
-Configuration is loaded from site-config YAML files:
+Configuration is loaded from config YAML files:
 - site.yaml: Site-wide defaults
 - secrets.yaml: All sensitive values (decrypted)
 - nodes/*.yaml: PVE instance configuration (post-PVE install)
@@ -45,8 +45,8 @@ class HostConfig:
     config_file: Path
     api_endpoint: str = ''
     ssh_host: str = ''
-    inner_vm_id: int = 99800  # Match site-config vmid_base for child PVE nodes
-    test_vm_id: int = 99900   # Match site-config/envs/test.yaml vmid_base
+    inner_vm_id: int = 99800  # Match config vmid_base for child PVE nodes
+    test_vm_id: int = 99900   # Match config/envs/test.yaml vmid_base
     ssh_user: str = field(default_factory=lambda: os.getenv('USER', ''))
     automation_user: str = 'homestak'  # For SSH to VMs (created via cloud-init)
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')
@@ -226,12 +226,12 @@ def get_base_dir() -> Path:
 
 
 def get_sibling_dir(name: str) -> Path:
-    """Get a sibling repo directory (ansible, tofu, packer, site-config)."""
+    """Get a sibling repo directory (ansible, tofu, packer, config)."""
     return get_base_dir().parent / name  # iac-driver/ -> homestak/ -> ansible/
 
 
 def get_site_config_dir() -> Path:
-    """Discover site-config directory.
+    """Discover config directory.
 
     Derived from $HOMESTAK_ROOT/config. On installed hosts, $HOME is the
     workspace root (default). On dev workstations, set HOMESTAK_ROOT explicitly.
@@ -242,14 +242,14 @@ def get_site_config_dir() -> Path:
         return config_dir
 
     raise ConfigError(
-        f"site-config not found at {config_dir}. "
+        f"config not found at {config_dir}. "
         "Set HOMESTAK_ROOT to your workspace root directory."
     )
 
 
 
 def list_hosts() -> list[str]:
-    """List available hosts/nodes from site-config.
+    """List available hosts/nodes from config.
 
     Combines hosts from multiple sources (deduplicated):
     1. nodes/*.yaml - PVE nodes (have API access)
@@ -313,12 +313,12 @@ def load_host_config(host: str) -> HostConfig:
 
 
 def load_secrets() -> dict:
-    """Load all secrets from site-config/secrets.yaml."""
+    """Load all secrets from config/secrets.yaml."""
     site_config = get_site_config_dir()
     secrets = _load_secrets(site_config)
     if secrets is None:
         raise ConfigError(
             "secrets.yaml not found or not decrypted. "
-            "Run: cd ../site-config && make decrypt"
+            "Run: cd ../config && make decrypt"
         )
     return secrets

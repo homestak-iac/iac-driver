@@ -1,7 +1,7 @@
 """Manifest loading and validation for infrastructure orchestration.
 
 Manifests define deployment topologies for VM/PVE provisioning.
-They reference site-config entities (presets, specs) via foreign keys.
+They reference config entities (presets, specs) via foreign keys.
 
 Schema v2: Graph-based nodes with parent references (#143) - used by operator engine.
 """
@@ -302,13 +302,13 @@ def _validate_graph(nodes: list[ManifestNode]) -> None:
 
 
 class ManifestLoader:
-    """Loads manifests from site-config/manifests/ directory."""
+    """Loads manifests from config/manifests/ directory."""
 
     def __init__(self, site_config_path: Optional[str] = None):
-        """Initialize loader with site-config path.
+        """Initialize loader with config path.
 
         Args:
-            site_config_path: Path to site-config directory. If None, uses
+            site_config_path: Path to config directory. If None, uses
                               auto-discovery (env var, sibling, ~/etc).
         """
         if yaml is None:
@@ -389,7 +389,7 @@ def load_manifest(
     Priority:
     1. json_str - Inline JSON (for recursion)
     2. file_path - Specific file path
-    3. name - Named manifest from site-config/manifests/
+    3. name - Named manifest from config/manifests/
 
     Args:
         name: Manifest name (without .yaml extension)

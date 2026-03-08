@@ -1,4 +1,4 @@
-"""Resolver package for FK resolution across site-config entities."""
+"""Resolver package for FK resolution across config entities."""
 
 from resolver.base import (
     ResolverError,

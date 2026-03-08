@@ -1,6 +1,6 @@
 """Spec resolver for the server.
 
-Loads specs from site-config/specs/ and resolves foreign key references
+Loads specs from config/specs/ and resolves foreign key references
 to postures and secrets. Migrated from bootstrap/lib/spec_resolver.py for
 unified server architecture.
 """
@@ -34,7 +34,7 @@ class SchemaValidationError(ResolverError):
 
 
 class SpecResolver(ResolverBase):
-    """Resolves specs from site-config with FK expansion.
+    """Resolves specs from config with FK expansion.
 
     Extends ResolverBase with spec-specific functionality:
     - Spec loading from specs/
@@ -48,7 +48,7 @@ class SpecResolver(ResolverBase):
         """Initialize resolver.
 
         Args:
-            etc_path: Path to site-config. Auto-discovered if not provided.
+            etc_path: Path to config. Auto-discovered if not provided.
         """
         super().__init__(etc_path)
         self._spec_cache: dict = {}

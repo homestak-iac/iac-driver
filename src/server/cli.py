@@ -108,7 +108,7 @@ def _create_server(args) -> Server:
     # Initialize spec resolver
     try:
         spec_resolver = SpecResolver()
-        logger.info("Using site-config at: %s", spec_resolver.etc_path)
+        logger.info("Using config at: %s", spec_resolver.etc_path)
     except ResolverError as e:
         logger.error("Failed to initialize: %s", e.message)
         sys.exit(1)

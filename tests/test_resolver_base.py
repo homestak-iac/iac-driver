@@ -49,7 +49,7 @@ class TestDiscoverEtcPath:
                 with pytest.raises(ResolverError) as exc_info:
                     discover_etc_path()
                 assert exc_info.value.code == "E500"
-                assert "Cannot find site-config" in exc_info.value.message
+                assert "Cannot find config" in exc_info.value.message
 
 
 class TestResolverBase:

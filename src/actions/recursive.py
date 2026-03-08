@@ -28,7 +28,7 @@ class RecursiveScenarioAction:
 
     The target host must have:
     - homestak CLI installed at ~/bin/homestak
-    - Valid site-config at ~/etc/
+    - Valid config at ~/config/
     - Decrypted secrets
 
     Attributes:

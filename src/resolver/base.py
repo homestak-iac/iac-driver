@@ -1,6 +1,6 @@
 """Base resolver with shared FK resolution utilities.
 
-This module provides common functionality for resolving site-config entities:
+This module provides common functionality for resolving config entities:
 - Path discovery
 - YAML loading with caching
 - Secrets and posture loading
@@ -59,13 +59,13 @@ class SecretsNotFoundError(ResolverError):
 
 
 def discover_etc_path() -> Path:
-    """Discover the site-config path.
+    """Discover the config path.
 
     Derived from $HOMESTAK_ROOT/config. On installed hosts, $HOME is the
     workspace root (default). On dev workstations, set HOMESTAK_ROOT explicitly.
 
     Returns:
-        Path to site-config directory
+        Path to config directory
 
     Raises:
         ResolverError: If no valid path found
@@ -77,7 +77,7 @@ def discover_etc_path() -> Path:
 
     raise ResolverError(
         "E500",
-        f"Cannot find site-config directory at {config_dir}. "
+        f"Cannot find config directory at {config_dir}. "
         "Set HOMESTAK_ROOT to your workspace root directory."
     )
 
@@ -85,7 +85,7 @@ def discover_etc_path() -> Path:
 class ResolverBase:
     """Base class for FK resolution with caching.
 
-    Provides common functionality for loading and caching site-config
+    Provides common functionality for loading and caching config
     entities: site.yaml, secrets.yaml, postures, and SSH key resolution.
     """
 
@@ -93,7 +93,7 @@ class ResolverBase:
         """Initialize resolver.
 
         Args:
-            etc_path: Path to site-config. Auto-discovered if not provided.
+            etc_path: Path to config. Auto-discovered if not provided.
 
         Raises:
             ResolverError: If PyYAML not installed
