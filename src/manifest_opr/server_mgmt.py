@@ -44,7 +44,7 @@ class ServerManager:
         loopback = ('localhost', '127.0.0.1', '::1')
         self._is_local = ssh_host in loopback or ssh_host in (
             socket.gethostname(), socket.getfqdn()
-        )
+        ) or ssh_host == ServerManager.detect_external_ip()
 
     def _run_on_host(self, cmd: str, timeout: int = 15) -> tuple[int, str, str]:
         """Run a command on the target host, locally or via SSH."""

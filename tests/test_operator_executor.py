@@ -5,6 +5,7 @@ and dry-run behavior without real infrastructure.
 """
 
 import os
+import socket
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -797,6 +798,40 @@ class TestServerSourceEnv:
         )
         with pytest.raises(ValueError, match='loopback'):
             executor._server._set_source_env('127.0.0.1')
+
+
+class TestServerManagerIsLocal:
+    """Tests for ServerManager._is_local detection (#299)."""
+
+    def test_loopback_is_local(self):
+        """Loopback addresses are detected as local."""
+        for addr in ('localhost', '127.0.0.1', '::1'):
+            mgr = ServerManager(addr, 'root')
+            assert mgr._is_local is True, f"{addr} should be local"
+
+    def test_hostname_is_local(self):
+        """Machine's own hostname is detected as local."""
+        hostname = socket.gethostname()
+        mgr = ServerManager(hostname, 'root')
+        assert mgr._is_local is True
+
+    @patch.object(ServerManager, 'detect_external_ip', return_value='198.51.100.61')
+    def test_own_ip_is_local(self, _mock_detect):
+        """Machine's own IP is detected as local (#299)."""
+        mgr = ServerManager('198.51.100.61', 'root')
+        assert mgr._is_local is True
+
+    @patch.object(ServerManager, 'detect_external_ip', return_value='198.51.100.61')
+    def test_remote_ip_is_not_local(self, _mock_detect):
+        """A different host's IP is not local."""
+        mgr = ServerManager('198.51.100.99', 'root')
+        assert mgr._is_local is False
+
+    @patch.object(ServerManager, 'detect_external_ip', return_value=None)
+    def test_detect_fails_falls_back_to_not_local(self, _mock_detect):
+        """When IP detection fails, non-loopback/hostname IPs are not local."""
+        mgr = ServerManager('198.51.100.61', 'root')
+        assert mgr._is_local is False
 
 
 class TestPushConfig:
