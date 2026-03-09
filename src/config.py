@@ -52,7 +52,7 @@ class HostConfig:
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')
 
     # Packer release settings
-    packer_release_repo: str = 'homestak-dev/packer'
+    packer_release_repo: str = 'homestak-iac/packer'
     packer_release: str = 'latest'
     packer_image: str = 'debian-12.qcow2'
 
