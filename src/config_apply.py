@@ -27,10 +27,10 @@ from common import run_command
 logger = logging.getLogger(__name__)
 
 # Platform-ready marker path (resolved at runtime via _discover_state_path)
-MARKER_PATH = Path.home() / 'config' / 'state' / 'config-complete.json'
+MARKER_PATH = Path.home() / 'config' / '.state' / 'config-complete.json'
 
 # Default spec path (written by `homestak spec get`)
-DEFAULT_SPEC_PATH = Path.home() / 'config' / 'state' / 'spec.yaml'
+DEFAULT_SPEC_PATH = Path.home() / 'config' / '.state' / 'spec.yaml'
 
 
 class ConfigError(Exception):
@@ -59,7 +59,7 @@ def _discover_state_path() -> Path:
 
     Derived from $HOMESTAK_ROOT/config/state.
     """
-    return _get_root() / 'config' / 'state'
+    return _get_root() / 'config' / '.state'
 
 
 def _discover_ansible_dir() -> Path:
