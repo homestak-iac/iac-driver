@@ -107,7 +107,7 @@ class ExecutionState:
     Tracks all node states and provides context propagation keys
     ({name}_vm_id, {name}_ip) so destroy can locate resources.
 
-    State is persisted to .states/{manifest}/execution.json.
+    State is persisted to $HOMESTAK_ROOT/.state/tofu/{manifest}/execution.json.
     """
 
     def __init__(self, manifest_name: str, host_name: str):
@@ -172,7 +172,7 @@ class ExecutionState:
         """Save state to JSON file.
 
         Args:
-            path: Optional override path. Default: .states/{manifest}/execution.json
+            path: Optional override path. Default: $HOMESTAK_ROOT/.state/tofu/{manifest}/execution.json
 
         Returns:
             Path where state was saved

@@ -491,7 +491,7 @@ def validate_provider_lockfiles(auto_fix: bool = True,
     """Validate provider lockfiles are in sync with version constraints.
 
     Compares the version in tofu/envs/generic/providers.tf with cached
-    lockfiles in iac-driver/.states/*/data/.terraform.lock.hcl.
+    lockfiles in $HOMESTAK_ROOT/.state/tofu/*/data/.terraform.lock.hcl.
 
     When a mismatch is found:
     - auto_fix=True: Delete stale lockfile (will regenerate on next tofu init)

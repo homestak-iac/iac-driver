@@ -213,8 +213,8 @@ Actions in `src/actions/tofu.py` use ConfigResolver to generate tfvars and run t
 
 **State Isolation:** Each manifest+node+host gets isolated state via explicit `-state` flag:
 ```
-iac-driver/.states/{manifest}/{node}-{host}/terraform.tfstate   # manifest operator
-iac-driver/.states/{node}-{host}/terraform.tfstate              # standalone scenarios
+$HOMESTAK_ROOT/.state/tofu/{manifest}/{node}-{host}/terraform.tfstate   # manifest operator
+$HOMESTAK_ROOT/.state/tofu/{node}-{host}/terraform.tfstate              # standalone scenarios
 ```
 
 The `-state` flag is required because `TF_DATA_DIR` only affects plugin/module caching, not state file location.
@@ -241,7 +241,7 @@ The server daemon serves specs and git repos over HTTPS. See [server-daemon.md](
 ./run.sh server stop                     # Stop daemon
 ```
 
-PID file: `/var/run/homestak/server.pid` | Log file: `$HOMESTAK_ROOT/logs/server.log`
+PID file: `$HOMESTAK_ROOT/.run/server-{port}.pid` | Log file: `$HOMESTAK_ROOT/logs/server.log`
 
 Operator (executor.py) auto-manages server lifecycle for manifest verbs with reference counting.
 
@@ -324,7 +324,7 @@ Nodes use **push** (default) or **pull** for config phase. See [config-phase.md]
 | Mode | How Config Runs | Operator Behavior |
 |------|----------------|-------------------|
 | `push` | Operator runs ansible from controller over SSH | Default; no spec injection in cloud-init |
-| `pull` | VM self-configures via cloud-init | Operator polls for config-complete.json |
+| `pull` | VM self-configures via cloud-init | Operator polls for complete.json |
 
 PVE nodes use a hybrid model: bootstrap and config distribution pull from the parent's server, while lifecycle orchestration (pve-setup, bridge config, API token, etc.) uses push via SSH. Push-mode nodes skip spec injection in cloud-init to avoid bootstrap race conditions.
 
