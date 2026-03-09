@@ -17,6 +17,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple
 
+from common import get_homestak_root
 from server.auth import validate_repo_token
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,11 @@ class RepoManager:
         Raises:
             RuntimeError: If no repos could be prepared
         """
-        self.serve_dir = Path(tempfile.mkdtemp(prefix="server-repos-"))
+        self.serve_dir = get_homestak_root() / '.cache' / 'server' / 'repos'
+        # Clean stale data from previous run (e.g., crash without cleanup)
+        if self.serve_dir.exists():
+            shutil.rmtree(self.serve_dir)
+        self.serve_dir.mkdir(parents=True)
         logger.info("Preparing repos in %s", self.serve_dir)
 
         for repo_name in KNOWN_REPOS:
