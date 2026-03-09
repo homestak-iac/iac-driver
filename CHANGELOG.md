@@ -9,7 +9,7 @@
 - Move PID files from `/var/run/homestak/` to `$HOMESTAK_ROOT/.run/`, remove sudo hack (#301)
 - Move server repo checkouts from `/tmp/` to `$HOMESTAK_ROOT/.cache/server/repos/` (#302)
 - Move tofu state from `iac-driver/.states/` to `$HOMESTAK_ROOT/.state/tofu/` (#304)
-- Move TLS certs from `~/.homestak/tls/` to `config/tls/{hostname}.{crt,key}` (#289)
+- Move TLS certs from `~/.homestak/tls/` to `$HOMESTAK_ROOT/config/tls/{hostname}.{crt,key}` (#289)
 - Move config state from `config/.state/` to `$HOMESTAK_ROOT/.state/config/`, rename marker to `complete.json` (#303)
 - Extract shared test doubles (MockHostConfig, TEST_SIGNING_KEY, mint_test_token) to conftest.py (#277)
 - Remove redundant `sys.path.insert` from 27 test files (conftest.py handles it) (#277)
