@@ -24,7 +24,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
@@ -52,7 +52,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'v0.20'
         context = {}
 
@@ -72,7 +72,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
@@ -105,7 +105,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
@@ -135,7 +135,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
@@ -161,7 +161,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'latest'
         context = {'node_ip': '192.0.2.1'}
 
@@ -192,7 +192,7 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-dev/packer'
+        config.packer_release_repo = 'homestak-iac/packer'
         config.packer_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 

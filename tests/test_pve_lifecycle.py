@@ -133,7 +133,7 @@ class TestCopySecretsAction:
     @patch('actions.pve_lifecycle.run_ssh')
     @patch('config.get_site_config_dir')
     def test_sets_restrictive_permissions(self, mock_dir, mock_ssh, mock_sub):
-        """Secrets must be chmod 600 after scp to ~/etc/."""
+        """Secrets must be chmod 600 after scp to ~/config/."""
         from actions.pve_lifecycle import CopySecretsAction
 
         # Setup: secrets.yaml exists at mocked path, scp succeeds, ssh succeeds

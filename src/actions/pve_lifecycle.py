@@ -303,7 +303,7 @@ class BootstrapAction:
         # Note: bootstrap needs sudo for apt/git operations, so we use 'sudo bash'
         if env_source:
             # Dev workflow: use HTTP server from --serve-repos
-            # Pass env vars to bash (not curl) so install.sh uses local (uncommitted) code
+            # Pass env vars to bash (not curl) so install uses local (uncommitted) code
             # Use 'sudo env VAR=value bash' because 'VAR=value sudo bash' doesn't work -
             # sudo resets the environment by default for security
             env_prefix = f'HOMESTAK_SOURCE={env_source}'
@@ -311,7 +311,7 @@ class BootstrapAction:
                 env_prefix += f' HOMESTAK_TOKEN={env_token}'
             env_prefix += f' HOMESTAK_REF={env_ref}'
             # Serve-repos uses self-signed TLS; pass -k to curl and
-            # HOMESTAK_INSECURE=1 so install.sh sets git http.sslVerify=false
+            # HOMESTAK_INSECURE=1 so install sets git http.sslVerify=false
             env_prefix += ' HOMESTAK_INSECURE=1'
             # Include Bearer token in curl header (serve-repos requires auth)
             auth_header = f'-H "Authorization: Bearer {env_token}"' if env_token else ''
