@@ -200,7 +200,7 @@ sudo pveum user token add root@pam tofu --privsep 0 --output-format json
         # Step 4: Inject token into secrets.yaml on the target host
         # First try to update existing line, if not found add a new one
         # Use the token_name we retrieved from hostname
-        secrets_file = '$HOME/etc/secrets.yaml'
+        secrets_file = '$HOME/config/secrets.yaml'
         inject_cmd = f'''
 # Check if token key exists in secrets.yaml
 if grep -q "^\\s*{token_name}:" {secrets_file}; then
@@ -409,7 +409,7 @@ class CopySecretsAction:
             '-o', 'StrictHostKeyChecking=no',
             '-o', 'UserKnownHostsFile=/dev/null',
             str(scoped_file),
-            f'{user}@{host}:etc/secrets.yaml'
+            f'{user}@{host}:config/secrets.yaml'
         ]
 
         try:
@@ -499,7 +499,7 @@ class CopySiteConfigAction:
             '-o', 'StrictHostKeyChecking=no',
             '-o', 'UserKnownHostsFile=/dev/null',
             str(site_path),
-            f'{user}@{host}:etc/site.yaml'
+            f'{user}@{host}:config/site.yaml'
         ]
 
         try:
