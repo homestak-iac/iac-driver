@@ -66,7 +66,7 @@ def _wait_for_local_guest_agent(
 class StartVMAction:
     """Start a VM on the local PVE host."""
     name: str
-    vm_id_attr: str = 'inner_vm_id'
+    vm_id_attr: str
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
         """Start a VM via local qm command."""
@@ -103,7 +103,7 @@ class StartVMAction:
 class WaitForGuestAgentAction:
     """Wait for QEMU guest agent and get VM IP."""
     name: str
-    vm_id_attr: str = 'inner_vm_id'
+    vm_id_attr: str
     ip_context_key: str = 'node_ip'
     timeout: int = 300
 
@@ -269,7 +269,7 @@ class WaitForProvisionedVMsAction:
 class StartVMRemoteAction:
     """Start a VM on a remote PVE host via SSH."""
     name: str
-    vm_id_attr: str = 'test_vm_id'
+    vm_id_attr: str
     pve_host_key: str = 'node_ip'
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
@@ -316,7 +316,7 @@ class StartVMRemoteAction:
 class WaitForGuestAgentRemoteAction:
     """Wait for guest agent on a remote PVE and get VM IP."""
     name: str
-    vm_id_attr: str = 'test_vm_id'
+    vm_id_attr: str
     pve_host_key: str = 'node_ip'
     ip_context_key: str = 'leaf_ip'
     timeout: int = 300

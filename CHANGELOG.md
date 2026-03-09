@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Removed
+- Remove legacy `inner_vm_id` and `test_vm_id` from HostConfig (#288)
+- Remove `vm_id_attr` defaults from StartVMAction, WaitForGuestAgentAction, StartVMRemoteAction, WaitForGuestAgentRemoteAction (now required)
+
 ## v0.55 - 2026-03-08
 
 No changes.
