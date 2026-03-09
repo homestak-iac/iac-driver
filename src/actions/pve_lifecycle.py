@@ -239,7 +239,7 @@ fi
 python3 -c "
 import yaml, urllib.request, ssl, json, sys, os
 try:
-    with open(os.path.expanduser('~/etc/secrets.yaml')) as f:
+    with open(os.path.expanduser('~/config/secrets.yaml')) as f:
         secrets = yaml.safe_load(f)
     token = secrets.get('api_tokens', {{}}).get('{token_name}', '')
     if not token or '!' not in token:
@@ -402,7 +402,7 @@ class CopySecretsAction:
         with open(scoped_file, 'w', encoding='utf-8') as f:
             yaml.dump(secrets, f, default_flow_style=False)
 
-        # scp directly to ~/etc/ (user-owned, no temp file dance needed)
+        # scp directly to ~/config/ (user-owned, no temp file dance needed)
         user = config.automation_user
         cmd = [
             'scp',
@@ -430,7 +430,7 @@ class CopySecretsAction:
 
             # Restrict permissions (secrets contain API tokens, SSH keys, signing key)
             rc, out, err = run_ssh(
-                host, 'chmod 600 ~/etc/secrets.yaml',
+                host, 'chmod 600 ~/config/secrets.yaml',
                 user=config.automation_user, timeout=30
             )
             if rc != 0:
@@ -492,7 +492,7 @@ class CopySiteConfigAction:
 
         logger.info(f"[{self.name}] Copying site config to {host}...")
 
-        # scp directly to ~/etc/ (user-owned, no temp file dance needed)
+        # scp directly to ~/config/ (user-owned, no temp file dance needed)
         user = config.automation_user
         cmd = [
             'scp',
@@ -575,15 +575,15 @@ class InjectSSHKeyAction:
 
         # Inject key into secrets.yaml using sed
         # First check if key already exists
-        check_cmd = f"grep -q '^\\s*{self.key_name}:' ~/etc/secrets.yaml"
+        check_cmd = f"grep -q '^\\s*{self.key_name}:' ~/config/secrets.yaml"
         rc, _, _ = run_ssh(host, check_cmd, user=config.automation_user, timeout=30)
 
         if rc == 0:
             # Key exists, update it
-            inject_cmd = f"sed -i 's|^\\(\\s*\\){self.key_name}:.*$|\\1{self.key_name}: {escaped_key}|' ~/etc/secrets.yaml"
+            inject_cmd = f"sed -i 's|^\\(\\s*\\){self.key_name}:.*$|\\1{self.key_name}: {escaped_key}|' ~/config/secrets.yaml"
         else:
             # Key doesn't exist, add it after ssh_keys:
-            inject_cmd = f"sed -i '/^ssh_keys:/a\\  {self.key_name}: {escaped_key}' ~/etc/secrets.yaml"
+            inject_cmd = f"sed -i '/^ssh_keys:/a\\  {self.key_name}: {escaped_key}' ~/config/secrets.yaml"
 
         rc, out, err = run_ssh(host, inject_cmd, user=config.automation_user, timeout=self.timeout)
         if rc != 0:
@@ -594,7 +594,7 @@ class InjectSSHKeyAction:
             )
 
         # Verify the key was injected
-        verify_cmd = f"grep -q '{self.key_name}:' ~/etc/secrets.yaml"
+        verify_cmd = f"grep -q '{self.key_name}:' ~/config/secrets.yaml"
         rc, _, _ = run_ssh(host, verify_cmd, user=config.automation_user, timeout=30)
         if rc != 0:
             return ActionResult(
@@ -728,7 +728,7 @@ class InjectSelfSSHKeyAction:
         python_script = '''
 import sys, os
 key_name = sys.argv[1]
-secrets_file = os.path.expanduser("~/etc/secrets.yaml")
+secrets_file = os.path.expanduser("~/config/secrets.yaml")
 
 # Find public key
 pubkey = None
@@ -926,7 +926,7 @@ class GenerateNodeConfigAction:
         logger.info(f"[{self.name}] Generating node config on {host}...")
 
         # Use FORCE=1 in case node config was copied from outer host
-        cmd = 'cd ~/etc && make node-config FORCE=1'
+        cmd = 'cd ~/config && make node-config FORCE=1'
         rc, out, err = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
 
         if rc != 0:

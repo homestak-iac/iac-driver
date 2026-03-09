@@ -309,7 +309,7 @@ class ManifestLoader:
 
         Args:
             site_config_path: Path to config directory. If None, uses
-                              auto-discovery (env var, sibling, ~/etc).
+                              auto-discovery (env var, sibling, ~/config).
         """
         if yaml is None:
             raise ConfigError("PyYAML not installed. Run: apt install python3-yaml")
