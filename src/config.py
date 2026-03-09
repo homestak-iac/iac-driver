@@ -308,7 +308,7 @@ def load_host_config(host: str) -> HostConfig:
         f"  - No host config: {host_path} (physical machine)\n\n"
         f"Available hosts: {', '.join(available) if available else 'none configured'}\n\n"
         f"To provision a new host, create {host_path}:\n"
-        f"  ssh root@<ip> \"cd ~/etc && make host-config\""
+        f"  ssh root@<ip> \"cd ~/config && make host-config\""
     )
 
 

@@ -516,7 +516,7 @@ class NodeExecutor:
         wait_spec = WaitForFileAction(
             name=f'wait-spec-{mn.name}',
             host_key=f'{mn.name}_ip',
-            file_path='~/etc/state/spec.yaml',
+            file_path='~/config/state/spec.yaml',
             timeout=timeout,
             interval=10,
         )
@@ -532,7 +532,7 @@ class NodeExecutor:
         wait_config = WaitForFileAction(
             name=f'wait-config-{mn.name}',
             host_key=f'{mn.name}_ip',
-            file_path='~/etc/state/config-complete.json',
+            file_path='~/config/state/config-complete.json',
             timeout=timeout,
             interval=10,
         )
@@ -676,9 +676,9 @@ class NodeExecutor:
             'mode': 'push',
         })
         marker_cmd = (
-            'mkdir -p ~/etc/state'
+            'mkdir -p ~/config/state'
             f" && echo '{marker_json}'"
-            ' > ~/etc/state/config-complete.json'
+            ' > ~/config/state/config-complete.json'
         )
         rc, _, err = run_ssh(ip, marker_cmd, user=user, timeout=30)
         if rc != 0:
@@ -689,7 +689,7 @@ class NodeExecutor:
         wait_config = WaitForFileAction(
             name=f'wait-config-{mn.name}',
             host_key=f'{mn.name}_ip',
-            file_path='~/etc/state/config-complete.json',
+            file_path='~/config/state/config-complete.json',
             timeout=60,
             interval=5,
         )

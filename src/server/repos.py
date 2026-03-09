@@ -247,7 +247,7 @@ def handle_repo_request(
     - Raw file extraction from bare repo
 
     Args:
-        path: Request path (e.g., "/bootstrap.git/install.sh")
+        path: Request path (e.g., "/bootstrap.git/install")
         auth_header: Authorization header from request
         repo_token: Expected repo token
         serve_dir: Path to serve directory with bare repos
