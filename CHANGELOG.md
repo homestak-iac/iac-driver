@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.56 - 2026-03-09
+
 ### Fixed
 - Fix local-host detection when ssh_host is the machine's own IP address (#299)
 
