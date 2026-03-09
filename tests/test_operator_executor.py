@@ -5,14 +5,9 @@ and dry-run behavior without real infrastructure.
 """
 
 import os
-import sys
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from common import ActionResult
 from manifest import Manifest

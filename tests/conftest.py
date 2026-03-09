@@ -1,12 +1,57 @@
 """Shared pytest fixtures for iac-driver tests."""
 
+import base64
+import hashlib
+import hmac
+import json
 import sys
+import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+
+# -- Shared test doubles -----------------------------------------------------
+
+@dataclass
+class MockHostConfig:
+    """Minimal host config for testing.
+
+    Superset of fields used across action test files.
+    Override defaults per-test as needed:
+        MockHostConfig(ssh_host='198.51.100.10', vm_id=12345)
+    """
+    name: str = 'test-host'
+    ssh_host: str = '192.0.2.1'
+    ssh_user: str = 'root'
+    automation_user: str = 'homestak'
+    vm_id: int = 99913
+    config_file: Path = Path('/tmp/test.yaml')
+
+
+# Test signing key (256-bit, hex-encoded)
+TEST_SIGNING_KEY = "a" * 64  # 32 bytes = 256 bits
+
+
+def mint_test_token(node: str, spec: str, signing_key: str = TEST_SIGNING_KEY,
+                    **overrides) -> str:
+    """Mint a valid provisioning token for testing."""
+    payload = {"v": 1, "n": node, "s": spec, "iat": int(time.time())}
+    payload.update(overrides)
+    payload_bytes = base64.urlsafe_b64encode(
+        json.dumps(payload, separators=(',', ':')).encode()
+    ).rstrip(b'=')
+    signature = hmac.new(
+        bytes.fromhex(signing_key),
+        payload_bytes,
+        hashlib.sha256,
+    ).digest()
+    sig_bytes = base64.urlsafe_b64encode(signature).rstrip(b'=')
+    return f"{payload_bytes.decode()}.{sig_bytes.decode()}"
 
 
 def _has_infrastructure():

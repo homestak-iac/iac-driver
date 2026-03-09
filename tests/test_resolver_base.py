@@ -8,10 +8,6 @@ from unittest.mock import patch, MagicMock
 import pytest
 import yaml
 
-# Add src to path for imports
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from resolver.base import (
     ResolverError,
     PostureNotFoundError,

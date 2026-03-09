@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+- Extract shared test doubles (MockHostConfig, TEST_SIGNING_KEY, mint_test_token) to conftest.py (#277)
+- Remove redundant `sys.path.insert` from 27 test files (conftest.py handles it) (#277)
+
 ### Removed
 - Remove legacy `inner_vm_id` and `test_vm_id` from HostConfig (#288)
 - Remove `vm_id_attr` defaults from StartVMAction, WaitForGuestAgentAction, StartVMRemoteAction, WaitForGuestAgentRemoteAction (now required)

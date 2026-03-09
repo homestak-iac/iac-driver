@@ -5,13 +5,9 @@ Verifies that manifest_opr/cli.py calls validate_readiness() before
 verb execution, and that --skip-preflight and --dry-run bypass checks.
 """
 
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 import pytest
 from manifest_opr.cli import _manifest_requires_nested_virt, _run_preflight

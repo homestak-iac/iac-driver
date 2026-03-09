@@ -1,42 +1,14 @@
 """Tests for server/specs.py - spec endpoint handler."""
 
-import base64
-import hashlib
-import hmac
-import json
-import time
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
 
-# Add src to path for imports
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
+from conftest import TEST_SIGNING_KEY, mint_test_token
 from server.specs import handle_spec_request, handle_specs_list, _error_response
 from resolver.spec_resolver import SpecResolver, SpecNotFoundError, SchemaValidationError
 from resolver.base import PostureNotFoundError, SSHKeyNotFoundError, ResolverError
-
-# Test signing key (256-bit, hex-encoded)
-TEST_SIGNING_KEY = "a" * 64
-
-
-def _mint_test_token(node: str, spec: str, signing_key: str = TEST_SIGNING_KEY, **overrides) -> str:
-    """Helper: mint a valid provisioning token for testing."""
-    payload = {"v": 1, "n": node, "s": spec, "iat": int(time.time())}
-    payload.update(overrides)
-    payload_bytes = base64.urlsafe_b64encode(
-        json.dumps(payload, separators=(',', ':')).encode()
-    ).rstrip(b'=')
-    signature = hmac.new(
-        bytes.fromhex(signing_key),
-        payload_bytes,
-        hashlib.sha256,
-    ).digest()
-    sig_bytes = base64.urlsafe_b64encode(signature).rstrip(b'=')
-    return f"{payload_bytes.decode()}.{sig_bytes.decode()}"
 
 
 class TestErrorResponse:
@@ -102,7 +74,7 @@ class TestHandleSpecRequest:
 
     def test_success_returns_spec(self, resolver):
         """Successful request returns resolved spec."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -114,7 +86,7 @@ class TestHandleSpecRequest:
 
     def test_success_resolves_ssh_keys(self, resolver):
         """Successful request includes resolved SSH keys."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -126,7 +98,7 @@ class TestHandleSpecRequest:
 
     def test_success_removes_internal_posture(self, resolver):
         """Response does not include internal _posture field."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -147,7 +119,7 @@ class TestHandleSpecRequest:
     def test_invalid_token_returns_401(self, resolver):
         """Invalid provisioning token returns 401."""
         wrong_key = "b" * 64
-        token = _mint_test_token("edge", "base", signing_key=wrong_key)
+        token = mint_test_token("edge", "base", signing_key=wrong_key)
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -157,7 +129,7 @@ class TestHandleSpecRequest:
 
     def test_missing_signing_key_returns_500(self, resolver):
         """Missing signing key returns 500."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, ""
         )
@@ -167,7 +139,7 @@ class TestHandleSpecRequest:
 
     def test_spec_not_found_returns_404(self, resolver):
         """Token references nonexistent spec returns 404."""
-        token = _mint_test_token("edge", "nonexistent")
+        token = mint_test_token("edge", "nonexistent")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -181,7 +153,7 @@ class TestHandleSpecRequest:
         (site_config / "specs" / "bad.yaml").write_text(yaml.dump(bad_spec))
 
         resolver = SpecResolver(etc_path=site_config)
-        token = _mint_test_token("edge", "bad")
+        token = mint_test_token("edge", "bad")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -201,7 +173,7 @@ class TestHandleSpecRequest:
         (site_config / "specs" / "bad-ssh.yaml").write_text(yaml.dump(bad_spec))
 
         resolver = SpecResolver(etc_path=site_config)
-        token = _mint_test_token("edge", "bad-ssh")
+        token = mint_test_token("edge", "bad-ssh")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -213,7 +185,7 @@ class TestHandleSpecRequest:
         """Spec is resolved using token's 's' claim, not URL identity."""
         resolver = SpecResolver(etc_path=site_config)
         # Token says spec=base, URL says identity=edge
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         response, status = handle_spec_request(
             "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY
         )
@@ -224,7 +196,7 @@ class TestHandleSpecRequest:
 
     def test_internal_error_returns_500(self, resolver):
         """Unexpected error returns 500."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         with patch.object(resolver, "resolve", side_effect=RuntimeError("Boom")):
             response, status = handle_spec_request(
                 "edge", f"Bearer {token}", resolver, TEST_SIGNING_KEY

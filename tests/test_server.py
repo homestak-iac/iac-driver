@@ -1,8 +1,5 @@
 """Tests for server/httpd.py - unified HTTPS server."""
 
-import base64
-import hashlib
-import hmac as hmac_mod
 import http.client
 import json
 import ssl
@@ -14,25 +11,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 import yaml
 
-TEST_SIGNING_KEY = "a" * 64  # 32 bytes hex = 256 bits
-
-
-def _mint_test_token(node: str, spec: str) -> str:
-    """Mint a provisioning token for integration tests."""
-    payload = {"v": 1, "n": node, "s": spec, "iat": int(time.time())}
-    payload_bytes = base64.urlsafe_b64encode(
-        json.dumps(payload, separators=(',', ':')).encode()
-    ).rstrip(b'=')
-    sig = hmac_mod.new(
-        bytes.fromhex(TEST_SIGNING_KEY), payload_bytes, hashlib.sha256,
-    ).digest()
-    sig_b64 = base64.urlsafe_b64encode(sig).rstrip(b'=')
-    return f"{payload_bytes.decode()}.{sig_b64.decode()}"
-
-# Add src to path for imports
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
+from conftest import TEST_SIGNING_KEY, mint_test_token
 from server.httpd import (
     ServerHandler,
     Server,
@@ -232,7 +211,7 @@ class TestServerIntegration:
 
     def test_spec_request(self, running_server):
         """Spec request with valid provisioning token returns resolved spec."""
-        token = _mint_test_token("base", "base")
+        token = mint_test_token("base", "base")
         conn = self._create_https_connection(
             running_server["host"], running_server["port"]
         )
@@ -247,7 +226,7 @@ class TestServerIntegration:
 
     def test_spec_not_found(self, running_server):
         """Nonexistent spec returns 404."""
-        token = _mint_test_token("nonexistent", "nonexistent")
+        token = mint_test_token("nonexistent", "nonexistent")
         conn = self._create_https_connection(
             running_server["host"], running_server["port"]
         )

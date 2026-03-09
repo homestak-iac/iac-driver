@@ -11,24 +11,12 @@ Tests verify:
 """
 
 import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import patch, MagicMock, Mock
 
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
 import pytest
 from common import ActionResult
-
-
-@dataclass
-class MockHostConfig:
-    """Minimal host config for testing."""
-    name: str = 'test-host'
-    ssh_host: str = '198.51.100.10'
-    ssh_user: str = 'root'
-    config_file: Path = Path('/tmp/test.yaml')
+from conftest import MockHostConfig
 
 
 class TestRecursiveScenarioActionInit:

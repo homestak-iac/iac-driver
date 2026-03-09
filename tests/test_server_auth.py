@@ -6,15 +6,11 @@ import hmac
 import json
 import os
 import time
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Add src to path for imports
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
+from conftest import TEST_SIGNING_KEY, mint_test_token
 from server.auth import (
     AuthError,
     extract_bearer_token,
@@ -22,26 +18,6 @@ from server.auth import (
     validate_repo_token,
     _base64url_decode,
 )
-
-
-# Test signing key (256-bit, hex-encoded)
-TEST_SIGNING_KEY = "a" * 64  # 32 bytes = 256 bits
-
-
-def _mint_test_token(node: str, spec: str, signing_key: str = TEST_SIGNING_KEY, **overrides) -> str:
-    """Helper: mint a valid provisioning token for testing."""
-    payload = {"v": 1, "n": node, "s": spec, "iat": int(time.time())}
-    payload.update(overrides)
-    payload_bytes = base64.urlsafe_b64encode(
-        json.dumps(payload, separators=(',', ':')).encode()
-    ).rstrip(b'=')
-    signature = hmac.new(
-        bytes.fromhex(signing_key),
-        payload_bytes,
-        hashlib.sha256,
-    ).digest()
-    sig_bytes = base64.urlsafe_b64encode(signature).rstrip(b'=')
-    return f"{payload_bytes.decode()}.{sig_bytes.decode()}"
 
 
 class TestAuthError:
@@ -115,7 +91,7 @@ class TestVerifyProvisioningToken:
 
     def test_valid_token(self):
         """Valid token returns decoded claims."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         claims = verify_provisioning_token(token, TEST_SIGNING_KEY, "edge")
 
         assert claims["v"] == 1
@@ -125,7 +101,7 @@ class TestVerifyProvisioningToken:
 
     def test_valid_token_different_spec(self):
         """Token with different spec FK is valid."""
-        token = _mint_test_token("pve-node", "pve")
+        token = mint_test_token("pve-node", "pve")
         claims = verify_provisioning_token(token, TEST_SIGNING_KEY, "pve-node")
 
         assert claims["s"] == "pve"
@@ -146,7 +122,7 @@ class TestVerifyProvisioningToken:
 
     def test_invalid_signature(self):
         """Rejects token with wrong signature."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         # Use a different signing key to verify
         wrong_key = "b" * 64
         with pytest.raises(AuthError) as exc_info:
@@ -156,7 +132,7 @@ class TestVerifyProvisioningToken:
 
     def test_tampered_payload(self):
         """Rejects token with modified payload."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         payload_b64, sig_b64 = token.split(".")
 
         # Tamper with payload (change a character)
@@ -171,7 +147,7 @@ class TestVerifyProvisioningToken:
 
     def test_identity_mismatch(self):
         """Rejects token when URL identity doesn't match token identity."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         with pytest.raises(AuthError) as exc_info:
             verify_provisioning_token(token, TEST_SIGNING_KEY, "wrong-identity")
         assert exc_info.value.code == "E301"
@@ -179,7 +155,7 @@ class TestVerifyProvisioningToken:
 
     def test_unsupported_version(self):
         """Rejects token with unsupported version."""
-        token = _mint_test_token("edge", "base", v=2)
+        token = mint_test_token("edge", "base", v=2)
         with pytest.raises(AuthError) as exc_info:
             verify_provisioning_token(token, TEST_SIGNING_KEY, "edge")
         assert exc_info.value.code == "E300"
@@ -222,7 +198,7 @@ class TestVerifyProvisioningToken:
 
     def test_invalid_signing_key_hex(self):
         """Rejects operation with malformed signing key."""
-        token = _mint_test_token("edge", "base")
+        token = mint_test_token("edge", "base")
         with pytest.raises(AuthError) as exc_info:
             verify_provisioning_token(token, "not-hex", "edge")
         assert exc_info.value.code == "E500"
@@ -243,7 +219,7 @@ class TestVerifyProvisioningToken:
     def test_iat_claim_preserved(self):
         """iat (issued-at) claim is preserved in returned claims."""
         now = int(time.time())
-        token = _mint_test_token("edge", "base", iat=now)
+        token = mint_test_token("edge", "base", iat=now)
         claims = verify_provisioning_token(token, TEST_SIGNING_KEY, "edge")
         assert claims["iat"] == now
 

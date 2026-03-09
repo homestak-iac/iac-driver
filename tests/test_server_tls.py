@@ -3,14 +3,9 @@
 import os
 import subprocess
 import tempfile
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
-
-# Add src to path for imports
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from server.tls import (
     TLSConfig,
