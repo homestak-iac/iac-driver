@@ -8,6 +8,7 @@ import pytest
 
 from server.daemon import (
     get_pid_file,
+    get_pid_dir,
     _read_pid,
     _process_alive,
     _health_check,
@@ -16,17 +17,17 @@ from server.daemon import (
     stop_daemon,
     _kill_process,
     _parent_wait,
-    PID_DIR,
 )
 
 
 class TestPidFile:
     """Tests for PID file path and I/O."""
 
-    def test_get_pid_file_default_port(self):
-        """PID file path uses port number."""
+    def test_get_pid_file_default_port(self, monkeypatch, tmp_path):
+        """PID file path uses port number under $HOMESTAK_ROOT/.run/."""
+        monkeypatch.setenv('HOMESTAK_ROOT', str(tmp_path))
         path = get_pid_file(44443)
-        assert path == PID_DIR / "server-44443.pid"
+        assert path == tmp_path / '.run' / "server-44443.pid"
 
     def test_get_pid_file_custom_port(self):
         """Different ports produce different PID files."""
@@ -35,6 +36,11 @@ class TestPidFile:
         assert p1 != p2
         assert "8443" in str(p1)
         assert "9443" in str(p2)
+
+    def test_pid_dir_uses_homestak_root(self, monkeypatch, tmp_path):
+        """PID directory is $HOMESTAK_ROOT/.run/."""
+        monkeypatch.setenv('HOMESTAK_ROOT', str(tmp_path))
+        assert get_pid_dir() == tmp_path / '.run'
 
     def test_read_pid_valid(self, tmp_path):
         """_read_pid reads integer PID from file."""

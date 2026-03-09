@@ -6,6 +6,7 @@
 - Fix local-host detection when ssh_host is the machine's own IP address (#299)
 
 ### Changed
+- Move PID files from `/var/run/homestak/` to `$HOMESTAK_ROOT/.run/`, remove sudo hack (#301)
 - Extract shared test doubles (MockHostConfig, TEST_SIGNING_KEY, mint_test_token) to conftest.py (#277)
 - Remove redundant `sys.path.insert` from 27 test files (conftest.py handles it) (#277)
 
