@@ -48,7 +48,7 @@ def discover_state_path() -> Path:
         Path to state directory
     """
     root = Path(os.environ.get("HOMESTAK_ROOT", str(Path.home())))
-    return root / "config" / "state"
+    return root / "config" / ".state"
 
 
 class SpecClient:
