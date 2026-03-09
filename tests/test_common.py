@@ -9,11 +9,7 @@ Tests verify:
 5. Timeout behavior
 """
 
-import sys
-from pathlib import Path
 from unittest.mock import patch, MagicMock
-
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 import pytest
 from common import (

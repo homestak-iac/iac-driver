@@ -3,14 +3,10 @@
 Unit tests for PVE lifecycle actions and helpers.
 """
 
-import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from common import ActionResult
 from actions.pve_lifecycle import _image_to_asset_name

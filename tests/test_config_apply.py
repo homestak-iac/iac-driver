@@ -1,13 +1,9 @@
 """Tests for config_apply module."""
 
 import json
-import sys
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from config_apply import (
     spec_to_ansible_vars,

@@ -1,14 +1,9 @@
 """Tests for manifest_opr.state module."""
 
 import json
-import sys
 import time
-from pathlib import Path
 
 import pytest
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from manifest_opr.state import NodeState, ExecutionState
 

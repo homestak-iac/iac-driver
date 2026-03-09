@@ -4,23 +4,10 @@ Tests for local actions (run_command) and remote actions (run_ssh).
 """
 
 import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
-
-@dataclass
-class MockHostConfig:
-    """Minimal host config for testing."""
-    name: str = 'test-host'
-    ssh_host: str = '192.0.2.1'
-    ssh_user: str = 'root'
-    automation_user: str = 'homestak'
-    vm_id: int = 99913
-    config_file: Path = Path('/tmp/test.yaml')
+from conftest import MockHostConfig
 
 
 # -- Module-level helpers --------------------------------------------------

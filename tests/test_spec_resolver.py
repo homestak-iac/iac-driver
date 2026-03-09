@@ -7,10 +7,6 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-# Add src to path for imports
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from resolver.spec_resolver import (
     SpecResolver,
     SpecNotFoundError,

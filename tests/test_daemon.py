@@ -6,9 +6,6 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from server.daemon import (
     get_pid_file,
     _read_pid,
