@@ -40,15 +40,15 @@ class SpecClientError(Exception):
 
 
 def discover_state_path() -> Path:
-    """Discover the state directory path.
+    """Discover the config state directory path.
 
-    Derived from $HOMESTAK_ROOT/config/state.
+    Derived from $HOMESTAK_ROOT/.state/config.
 
     Returns:
         Path to state directory
     """
     root = Path(os.environ.get("HOMESTAK_ROOT", str(Path.home())))
-    return root / "config" / ".state"
+    return root / ".state" / "config"
 
 
 class SpecClient:

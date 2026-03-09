@@ -10,9 +10,9 @@ from config_apply import (
     _load_spec,
     _fetch_spec,
     _write_marker,
+    _get_marker_path,
     apply_config,
     ConfigError,
-    MARKER_PATH,
 )
 
 
@@ -173,8 +173,8 @@ class TestWriteMarker:
 
     def test_marker_written(self, tmp_path, monkeypatch):
         """Marker file is written with correct content."""
-        marker_path = tmp_path / 'state' / 'config-complete.json'
-        monkeypatch.setattr('config_apply.MARKER_PATH', marker_path)
+        marker_path = tmp_path / '.state' / 'config' / 'complete.json'
+        monkeypatch.setattr('config_apply._get_marker_path', lambda: marker_path)
 
         result = _write_marker(
             {'packages': ['a', 'b'], 'local_user': 'test', 'services_enable': ['svc']},

@@ -13,12 +13,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from common import get_homestak_root
+
 logger = logging.getLogger(__name__)
 
 # Certificate defaults
-DEFAULT_CERT_DIR = Path.home() / ".homestak" / "tls"
 DEFAULT_CERT_DAYS = 365
 DEFAULT_KEY_SIZE = 4096
+
+
+def get_default_cert_dir() -> Path:
+    """Return default TLS cert directory: $HOMESTAK_ROOT/config/tls/."""
+    result: Path = get_homestak_root() / 'config' / 'tls'
+    return result
 
 
 @dataclass
@@ -126,8 +133,8 @@ def generate_self_signed_cert(
     - Validity = 365 days
 
     Args:
-        cert_dir: Directory to store certificate files (default: /var/lib/homestak/controller)
-        hostname: Hostname for certificate CN (default: system hostname)
+        cert_dir: Directory to store certificate files (default: $HOMESTAK_ROOT/config/tls/)
+        hostname: Hostname for certificate CN and filename (default: system hostname)
         days: Certificate validity in days
         key_size: RSA key size in bits
         force: Overwrite existing certificate
@@ -140,14 +147,14 @@ def generate_self_signed_cert(
         subprocess.CalledProcessError: If openssl command fails
         PermissionError: If cannot write to cert_dir
     """
-    cert_dir = cert_dir or DEFAULT_CERT_DIR
+    cert_dir = cert_dir or get_default_cert_dir()
     hostname = hostname or get_hostname()
 
     # Ensure directory exists
     cert_dir.mkdir(parents=True, exist_ok=True)
 
-    cert_path = cert_dir / "server.crt"
-    key_path = cert_dir / "server.key"
+    cert_path = cert_dir / f"{hostname}.crt"
+    key_path = cert_dir / f"{hostname}.key"
 
     # Check for existing certificate
     if cert_path.exists() and not force:

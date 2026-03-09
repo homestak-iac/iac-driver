@@ -13,13 +13,21 @@ import sys
 import time
 from pathlib import Path
 
+from common import get_homestak_root
+
 logger = logging.getLogger(__name__)
 
-# Server runtime paths (PID stays in /var/run for system visibility, log in $HOMESTAK_ROOT/logs)
-PID_DIR = Path("/var/run/homestak")
-_HOMESTAK_ROOT = Path(os.environ.get("HOMESTAK_ROOT", str(Path.home())))
-LOG_DIR = _HOMESTAK_ROOT / "logs"
-DEFAULT_LOG_FILE = LOG_DIR / "server.log"
+
+def get_pid_dir() -> Path:
+    """Return PID directory: $HOMESTAK_ROOT/.run/."""
+    result: Path = get_homestak_root() / '.run'
+    return result
+
+
+def get_log_dir() -> Path:
+    """Return log directory: $HOMESTAK_ROOT/logs/."""
+    result: Path = get_homestak_root() / 'logs'
+    return result
 
 
 def get_pid_file(port: int) -> Path:
@@ -27,7 +35,7 @@ def get_pid_file(port: int) -> Path:
 
     Port-qualified filename supports multiple servers on different ports.
     """
-    return PID_DIR / f"server-{port}.pid"
+    return get_pid_dir() / f"server-{port}.pid"
 
 
 def _read_pid(pid_file: Path) -> int | None:
@@ -126,7 +134,7 @@ def daemonize(
     """
     pid_file = get_pid_file(port)
     if log_file is None:
-        log_file = DEFAULT_LOG_FILE
+        log_file = get_log_dir() / "server.log"
 
     # Check for existing server
     existing = _check_existing(port)
@@ -144,13 +152,8 @@ def daemonize(
             pass
 
     # Ensure directories exist
-    # PID_DIR is under /var/run (root-owned) — create with sudo, chown to current user
-    if not PID_DIR.exists():
-        import subprocess
-        subprocess.run(['sudo', 'mkdir', '-p', str(PID_DIR)], check=True)
-        subprocess.run(['sudo', 'chown', f'{os.getuid()}:{os.getgid()}', str(PID_DIR)],
-                        check=True)
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    get_pid_dir().mkdir(parents=True, exist_ok=True)
+    get_log_dir().mkdir(parents=True, exist_ok=True)
 
     # Create pipe for parent-child coordination
     read_fd, write_fd = os.pipe()

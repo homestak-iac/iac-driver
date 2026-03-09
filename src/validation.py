@@ -491,7 +491,7 @@ def validate_provider_lockfiles(auto_fix: bool = True,
     """Validate provider lockfiles are in sync with version constraints.
 
     Compares the version in tofu/envs/generic/providers.tf with cached
-    lockfiles in iac-driver/.states/*/data/.terraform.lock.hcl.
+    lockfiles in $HOMESTAK_ROOT/.state/tofu/*/data/.terraform.lock.hcl.
 
     When a mismatch is found:
     - auto_fix=True: Delete stale lockfile (will regenerate on next tofu init)
@@ -508,7 +508,8 @@ def validate_provider_lockfiles(auto_fix: bool = True,
         - errors: List of error messages (empty if all valid or fixed)
         - fixed: List of fixed lockfile descriptions (for reporting)
     """
-    from config import get_sibling_dir, get_base_dir
+    from common import get_state_dir
+    from config import get_sibling_dir
 
     errors: list[str] = []
     fixed: list[str] = []
@@ -526,8 +527,8 @@ def validate_provider_lockfiles(auto_fix: bool = True,
     if verbose:
         logger.info(f"Required provider version: bpg/proxmox {required_version}")
 
-    # Find all cached lockfiles in .states/
-    states_dir = _states_dir if _states_dir else get_base_dir() / '.states'
+    # Find all cached lockfiles in .state/tofu/
+    states_dir = _states_dir if _states_dir else get_state_dir() / 'tofu'
     if not states_dir.exists():
         return errors, fixed  # No state dirs yet, nothing to validate
 
@@ -723,7 +724,8 @@ def run_preflight_checks(local_mode: bool = True,  # pylint: disable=unused-argu
 
     # Tofu provider lockfile checks
     try:
-        from config import get_sibling_dir, get_base_dir
+        from common import get_state_dir
+        from config import get_sibling_dir
 
         lockfile_errors, lockfile_fixed = validate_provider_lockfiles(
             auto_fix=True, verbose=verbose
@@ -739,7 +741,7 @@ def run_preflight_checks(local_mode: bool = True,  # pylint: disable=unused-argu
                 results['tofu']['passed'].append(f"Provider version: bpg/proxmox {version}")
 
             # Report state directories status
-            states_dir = get_base_dir() / '.states'
+            states_dir = get_state_dir() / 'tofu'
             if states_dir.exists():
                 state_count = len([d for d in states_dir.iterdir() if d.is_dir()])
                 if state_count > 0:

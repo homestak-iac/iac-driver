@@ -30,6 +30,17 @@ def get_homestak_root() -> Path:
     return Path(os.environ.get('HOMESTAK_ROOT', Path.home()))
 
 
+def get_state_dir() -> Path:
+    """Return the root state directory: $HOMESTAK_ROOT/.state/.
+
+    Subdirectories:
+    - tofu/    — terraform state files and execution state
+    - config/  — config-complete marker and spec cache
+    """
+    result: Path = get_homestak_root() / '.state'
+    return result
+
+
 @dataclass
 class ActionResult:
     """Result returned by an action."""

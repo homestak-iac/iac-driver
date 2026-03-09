@@ -6,7 +6,6 @@ Provides the `server` verb for server daemon management (start/stop/status).
 import argparse
 import json
 import logging
-import os
 import secrets
 import sys
 from pathlib import Path
@@ -18,7 +17,7 @@ from server.daemon import (
     daemonize,
     stop_daemon,
     check_status,
-    DEFAULT_LOG_FILE,
+    get_log_dir,
 )
 from resolver.spec_resolver import SpecResolver
 from resolver.base import ResolverError
@@ -138,7 +137,8 @@ def _create_server(args) -> Server:
         repos_dir = args.repos_dir or get_default_repos_dir()
         # Repos outside repos_dir (~/iac/): config at ~/config, bootstrap at ~/bootstrap
         extra_paths = {}
-        workspace_root = Path(os.environ.get('HOMESTAK_ROOT', str(Path.home())))
+        from common import get_homestak_root
+        workspace_root = get_homestak_root()
         config_dir = workspace_root / 'config'
         if config_dir.is_dir() and (config_dir / '.git').is_dir():
             extra_paths['config'] = config_dir
@@ -180,7 +180,7 @@ def _handle_start(argv):
     parser.add_argument(
         "--log",
         type=Path,
-        default=DEFAULT_LOG_FILE,
+        default=get_log_dir() / "server.log",
         help="Log file path for daemon output",
     )
     parser.add_argument(

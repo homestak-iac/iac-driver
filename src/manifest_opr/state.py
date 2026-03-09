@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from config import get_base_dir
+from common import get_state_dir
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class ExecutionState:
     Tracks all node states and provides context propagation keys
     ({name}_vm_id, {name}_ip) so destroy can locate resources.
 
-    State is persisted to .states/{manifest}/execution.json.
+    State is persisted to $HOMESTAK_ROOT/.state/tofu/{manifest}/execution.json.
     """
 
     def __init__(self, manifest_name: str, host_name: str):
@@ -165,14 +165,14 @@ class ExecutionState:
 
     def _state_dir(self) -> Path:
         """Return state directory path for this manifest."""
-        result: Path = get_base_dir() / '.states' / self.manifest_name
+        result: Path = get_state_dir() / 'tofu' / self.manifest_name
         return result
 
     def save(self, path: Optional[Path] = None) -> Path:
         """Save state to JSON file.
 
         Args:
-            path: Optional override path. Default: .states/{manifest}/execution.json
+            path: Optional override path. Default: $HOMESTAK_ROOT/.state/tofu/{manifest}/execution.json
 
         Returns:
             Path where state was saved

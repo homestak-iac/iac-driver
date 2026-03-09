@@ -22,15 +22,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from common import run_command
+from common import run_command, get_state_dir, get_homestak_root
 
 logger = logging.getLogger(__name__)
 
-# Platform-ready marker path (resolved at runtime via _discover_state_path)
-MARKER_PATH = Path.home() / 'config' / '.state' / 'config-complete.json'
 
-# Default spec path (written by `homestak spec get`)
-DEFAULT_SPEC_PATH = Path.home() / 'config' / '.state' / 'spec.yaml'
+def _get_config_state_dir() -> Path:
+    """Return config state directory: $HOMESTAK_ROOT/.state/config/."""
+    result: Path = get_state_dir() / 'config'
+    return result
+
+
+def _get_marker_path() -> Path:
+    """Return platform-ready marker path."""
+    return _get_config_state_dir() / 'complete.json'
+
+
+def _get_default_spec_path() -> Path:
+    """Return default spec path (written by `homestak spec get`)."""
+    return _get_config_state_dir() / 'spec.yaml'
 
 
 class ConfigError(Exception):
@@ -49,25 +59,12 @@ class ConfigResult:
     users_count: int = 0
 
 
-def _get_root() -> Path:
-    """Return the homestak root directory."""
-    return Path(os.environ.get('HOMESTAK_ROOT', str(Path.home())))
-
-
-def _discover_state_path() -> Path:
-    """Discover the homestak state directory.
-
-    Derived from $HOMESTAK_ROOT/config/state.
-    """
-    return _get_root() / 'config' / '.state'
-
-
 def _discover_ansible_dir() -> Path:
     """Discover the ansible directory.
 
     Derived from $HOMESTAK_ROOT/iac/ansible.
     """
-    ansible_dir = _get_root() / 'iac' / 'ansible'
+    ansible_dir: Path = get_homestak_root() / 'iac' / 'ansible'
     if ansible_dir.exists():
         return ansible_dir
 
@@ -222,7 +219,7 @@ def _write_marker(ansible_vars: dict, spec_name: str) -> Path:
     Returns:
         Path to the marker file
     """
-    MARKER_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _get_marker_path().parent.mkdir(parents=True, exist_ok=True)
     marker = {
         'phase': 'config',
         'status': 'complete',
@@ -233,10 +230,10 @@ def _write_marker(ansible_vars: dict, spec_name: str) -> Path:
         'services_disabled': len(ansible_vars.get('services_disable', [])),
         'users': 1 if 'local_user' in ansible_vars else 0,
     }
-    with open(MARKER_PATH, 'w', encoding='utf-8') as f:
+    with open(_get_marker_path(), 'w', encoding='utf-8') as f:
         json.dump(marker, f, indent=2)
-    logger.info(f"Wrote config-complete marker to {MARKER_PATH}")
-    return MARKER_PATH
+    logger.info(f"Wrote config-complete marker to {_get_marker_path()}")
+    return _get_marker_path()
 
 
 def apply_config(
@@ -260,7 +257,7 @@ def apply_config(
 
     # 1. Find spec
     if spec_path is None:
-        spec_path = DEFAULT_SPEC_PATH
+        spec_path = _get_default_spec_path()
 
     try:
         spec = _load_spec(spec_path)
@@ -321,7 +318,7 @@ def apply_config(
         )
 
     # 4. Write vars file
-    state_dir = _discover_state_path()
+    state_dir = _get_config_state_dir()
     vars_file = _write_vars_file(ansible_vars, state_dir)
 
     # 5. Run ansible-playbook
@@ -476,7 +473,7 @@ def apply_main(argv: list) -> int:
     parser.add_argument(
         '--spec',
         type=Path,
-        help=f'Path to spec file (default: {DEFAULT_SPEC_PATH})',
+        help=f'Path to spec file (default: {_get_default_spec_path()})',
     )
     parser.add_argument(
         '--dry-run',
