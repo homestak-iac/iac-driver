@@ -45,8 +45,6 @@ class HostConfig:
     config_file: Path
     api_endpoint: str = ''
     ssh_host: str = ''
-    inner_vm_id: int = 99800  # Match config vmid_base for child PVE nodes
-    test_vm_id: int = 99900   # Match config/envs/test.yaml vmid_base
     ssh_user: str = field(default_factory=lambda: os.getenv('USER', ''))
     automation_user: str = 'homestak'  # For SSH to VMs (created via cloud-init)
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')

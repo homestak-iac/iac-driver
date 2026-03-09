@@ -19,7 +19,7 @@ class MockHostConfig:
     ssh_host: str = '192.0.2.1'
     ssh_user: str = 'root'
     automation_user: str = 'homestak'
-    inner_vm_id: int = 99913
+    vm_id: int = 99913
     config_file: Path = Path('/tmp/test.yaml')
 
 
@@ -106,7 +106,7 @@ class TestStartVMAction:
         """Successful VM start should return success."""
         from actions.proxmox import StartVMAction
 
-        action = StartVMAction(name='test', vm_id_attr='inner_vm_id')
+        action = StartVMAction(name='test', vm_id_attr='vm_id')
         config = MockHostConfig()
         context = {}
 
@@ -120,7 +120,7 @@ class TestStartVMAction:
         """Failed VM start should return failure with error message."""
         from actions.proxmox import StartVMAction
 
-        action = StartVMAction(name='test', vm_id_attr='inner_vm_id')
+        action = StartVMAction(name='test', vm_id_attr='vm_id')
         config = MockHostConfig()
         context = {}
 
@@ -150,9 +150,9 @@ class TestStartVMAction:
         """Should prefer context over config for vm_id."""
         from actions.proxmox import StartVMAction
 
-        action = StartVMAction(name='test', vm_id_attr='inner_vm_id')
+        action = StartVMAction(name='test', vm_id_attr='vm_id')
         config = MockHostConfig()
-        context = {'inner_vm_id': 12345}
+        context = {'vm_id': 12345}
 
         with patch('actions.proxmox.run_command', return_value=(0, '', '')) as mock:
             result = action.run(config, context)
@@ -166,7 +166,7 @@ class TestStartVMAction:
         """Should call sudo qm start."""
         from actions.proxmox import StartVMAction
 
-        action = StartVMAction(name='test', vm_id_attr='inner_vm_id')
+        action = StartVMAction(name='test', vm_id_attr='vm_id')
         config = MockHostConfig()
         context = {}
 
@@ -185,7 +185,7 @@ class TestWaitForGuestAgentAction:
         from actions.proxmox import WaitForGuestAgentAction
 
         action = WaitForGuestAgentAction(
-            name='test', vm_id_attr='inner_vm_id',
+            name='test', vm_id_attr='vm_id',
             ip_context_key='node_ip', timeout=5,
         )
         config = MockHostConfig()
@@ -203,7 +203,7 @@ class TestWaitForGuestAgentAction:
         from actions.proxmox import WaitForGuestAgentAction
 
         action = WaitForGuestAgentAction(
-            name='test', vm_id_attr='inner_vm_id', timeout=5,
+            name='test', vm_id_attr='vm_id', timeout=5,
         )
         config = MockHostConfig()
         context = {}
@@ -378,9 +378,9 @@ class TestStartVMRemoteAction:
         """Successful remote VM start."""
         from actions.proxmox import StartVMRemoteAction
 
-        action = StartVMRemoteAction(name='test', vm_id_attr='test_vm_id')
+        action = StartVMRemoteAction(name='test', vm_id_attr='vm_id')
         config = MockHostConfig()
-        context = {'node_ip': '192.0.2.1', 'test_vm_id': 99920}
+        context = {'node_ip': '192.0.2.1', 'vm_id': 99920}
 
         with patch('actions.proxmox.run_ssh', return_value=(0, '', '')):
             result = action.run(config, context)
@@ -391,9 +391,9 @@ class TestStartVMRemoteAction:
         """Should fail when PVE host not in context."""
         from actions.proxmox import StartVMRemoteAction
 
-        action = StartVMRemoteAction(name='test', vm_id_attr='test_vm_id')
+        action = StartVMRemoteAction(name='test', vm_id_attr='vm_id')
         config = MockHostConfig()
-        context = {'test_vm_id': 99920}
+        context = {'vm_id': 99920}
 
         result = action.run(config, context)
 
