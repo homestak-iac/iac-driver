@@ -22,7 +22,7 @@ class TestTofuApplyAction:
 
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -30,12 +30,12 @@ class TestTofuApplyAction:
 
         tofu_dir = tmp_path / 'tofu' / 'envs' / 'generic'
         tofu_dir.mkdir(parents=True)
-        state_dir = tmp_path / '.states' / 'testvm-father'
+        state_dir = tmp_path / 'tofu' / 'testvm-srv1'
 
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command') as mock_cmd:
             # Create the temp tfvars file so cleanup doesn't fail
             (tmp_path / 'tfvars.json').touch()
@@ -53,7 +53,7 @@ class TestTofuApplyAction:
         """ConfigResolver failure should return error."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         with patch('actions.tofu.ConfigResolver') as mock_cls:
@@ -68,7 +68,7 @@ class TestTofuApplyAction:
         """tofu init failure should return error."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -78,7 +78,7 @@ class TestTofuApplyAction:
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command', return_value=(1, '', 'init failed')):
             (tmp_path / 'tfvars.json').touch()
             result = action.run(config, context)
@@ -90,7 +90,7 @@ class TestTofuApplyAction:
         """tofu apply failure should return error and clean up tfvars."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -100,7 +100,7 @@ class TestTofuApplyAction:
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command') as mock_cmd:
             (tmp_path / 'tfvars.json').touch()
             mock_cmd.side_effect = [
@@ -118,7 +118,7 @@ class TestTofuApplyAction:
         """Missing tofu directory should return error."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -135,7 +135,7 @@ class TestTofuApplyAction:
         """State should be isolated per vm_name + node."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -151,22 +151,22 @@ class TestTofuApplyAction:
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command', side_effect=capture_cmd):
             (tmp_path / 'tfvars.json').touch()
             action.run(config, context)
 
-        # The apply command should reference testvm-father in state path
+        # The apply command should reference testvm-srv1 in state path
         apply_cmd = captured_cmds[1]
         state_args = [a for a in apply_cmd if '-state=' in a]
         assert len(state_args) == 1
-        assert 'testvm-father' in state_args[0]
+        assert 'testvm-srv1' in state_args[0]
 
     def test_apply_context_updates(self, tmp_path):
         """Apply should add vm_id and provisioned_vms to context."""
         action = self._make_action(vm_preset='vm-small', image='debian-12', vmid=99913)
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -176,7 +176,7 @@ class TestTofuApplyAction:
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command', return_value=(0, '', '')):
             (tmp_path / 'tfvars.json').touch()
             result = action.run(config, context)
@@ -201,20 +201,20 @@ class TestTofuDestroyAction:
         """Successful destroy should return success."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
         tofu_dir = tmp_path / 'tofu' / 'envs' / 'generic'
         tofu_dir.mkdir(parents=True)
-        state_dir = tmp_path / '.states' / 'testvm-father'
+        state_dir = tmp_path / 'tofu' / 'testvm-srv1'
         state_dir.mkdir(parents=True)
         (state_dir / 'terraform.tfstate').write_text('{}')
 
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command', return_value=(0, '', '')):
             (tmp_path / 'tfvars.json').touch()
             result = action.run(config, context)
@@ -226,7 +226,7 @@ class TestTofuDestroyAction:
         """Missing state file should return success (nothing to destroy)."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
@@ -236,7 +236,7 @@ class TestTofuDestroyAction:
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path):
+             patch('actions.tofu.get_state_dir', return_value=tmp_path):
             result = action.run(config, context)
 
         assert result.success is True
@@ -246,20 +246,20 @@ class TestTofuDestroyAction:
         """tofu destroy failure should return error."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()
         tofu_dir = tmp_path / 'tofu' / 'envs' / 'generic'
         tofu_dir.mkdir(parents=True)
-        state_dir = tmp_path / '.states' / 'testvm-father'
+        state_dir = tmp_path / 'tofu' / 'testvm-srv1'
         state_dir.mkdir(parents=True)
         (state_dir / 'terraform.tfstate').write_text('{}')
 
         with patch('actions.tofu.ConfigResolver', return_value=mock_resolver), \
              patch('actions.tofu.create_temp_tfvars', return_value=tmp_path / 'tfvars.json'), \
              patch('actions.tofu.get_sibling_dir', return_value=tmp_path / 'tofu'), \
-             patch('actions.tofu.get_base_dir', return_value=tmp_path), \
+             patch('actions.tofu.get_state_dir', return_value=tmp_path), \
              patch('actions.tofu.run_command', return_value=(1, '', 'destroy failed')):
             (tmp_path / 'tfvars.json').touch()
             result = action.run(config, context)
@@ -271,7 +271,7 @@ class TestTofuDestroyAction:
         """ConfigResolver failure should return error."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         with patch('actions.tofu.ConfigResolver') as mock_cls:
@@ -286,7 +286,7 @@ class TestTofuDestroyAction:
         """Missing tofu directory should return error."""
         action = self._make_action(vm_preset='vm-small', image='debian-12')
         config = MagicMock()
-        config.name = 'father'
+        config.name = 'srv1'
         context = {}
 
         mock_resolver = MagicMock()

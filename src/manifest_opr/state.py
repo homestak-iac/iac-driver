@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from config import get_base_dir
+from common import get_state_dir
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class ExecutionState:
 
     def _state_dir(self) -> Path:
         """Return state directory path for this manifest."""
-        result: Path = get_base_dir() / '.states' / self.manifest_name
+        result: Path = get_state_dir() / 'tofu' / self.manifest_name
         return result
 
     def save(self, path: Optional[Path] = None) -> Path:

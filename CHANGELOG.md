@@ -8,6 +8,7 @@
 ### Changed
 - Move PID files from `/var/run/homestak/` to `$HOMESTAK_ROOT/.run/`, remove sudo hack (#301)
 - Move server repo checkouts from `/tmp/` to `$HOMESTAK_ROOT/.cache/server/repos/` (#302)
+- Move tofu state from `iac-driver/.states/` to `$HOMESTAK_ROOT/.state/tofu/` (#304)
 - Extract shared test doubles (MockHostConfig, TEST_SIGNING_KEY, mint_test_token) to conftest.py (#277)
 - Remove redundant `sys.path.insert` from 27 test files (conftest.py handles it) (#277)
 

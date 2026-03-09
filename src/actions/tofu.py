@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from common import ActionResult, run_command
-from config import HostConfig, get_sibling_dir, get_base_dir
+from common import ActionResult, run_command, get_state_dir
+from config import HostConfig, get_sibling_dir
 from config_resolver import ConfigResolver
 
 logger = logging.getLogger(__name__)
@@ -85,9 +85,9 @@ class TofuApplyAction:
         # State isolation: namespace by manifest to avoid lock contention
         state_subdir = f'{self.vm_name}-{config.name}'
         if self.manifest_name:
-            state_dir = get_base_dir() / '.states' / self.manifest_name / state_subdir
+            state_dir = get_state_dir() / 'tofu' / self.manifest_name / state_subdir
         else:
-            state_dir = get_base_dir() / '.states' / state_subdir
+            state_dir = get_state_dir() / 'tofu' / state_subdir
         data_dir = state_dir / 'data'
         data_dir.mkdir(parents=True, exist_ok=True)
         state_file = state_dir / 'terraform.tfstate'
@@ -190,9 +190,9 @@ class TofuDestroyAction:
         # State isolation: namespace by manifest to avoid lock contention
         state_subdir = f'{self.vm_name}-{config.name}'
         if self.manifest_name:
-            state_dir = get_base_dir() / '.states' / self.manifest_name / state_subdir
+            state_dir = get_state_dir() / 'tofu' / self.manifest_name / state_subdir
         else:
-            state_dir = get_base_dir() / '.states' / state_subdir
+            state_dir = get_state_dir() / 'tofu' / state_subdir
         data_dir = state_dir / 'data'
         state_file = state_dir / 'terraform.tfstate'
         env = {**os.environ, 'TF_DATA_DIR': str(data_dir)}
