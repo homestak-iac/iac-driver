@@ -8,6 +8,18 @@
   - All paths derived: `$HOMESTAK_ROOT/config`, `$HOMESTAK_ROOT/iac/ansible`
   - `get_site_config_dir()`, `discover_etc_path()`, `discover_state_path()` simplified
   - Default: `$HOME` (on installed hosts, `$HOME` = workspace root)
+- Update stale paths across codebase for multi-org migration (meta#320)
+  - `site-config` → `config`, `~/lib/` → `~/iac/`, `~/etc/` → `~/config/`
+  - `homestak-dev/packer` → `homestak-iac/packer` in config defaults
+  - `install.sh` → `install` in comments and references
+
+### Fixed
+- Update SCP targets from `etc/` to `config/` for secrets and site.yaml (#292)
+- Update homestak CLI path from `~/bin/homestak` to `~/bootstrap/homestak` (#293)
+- Use `config/.state/` for runtime markers instead of `config/state/` (#291)
+- Update SSH paths from `~/lib/iac-driver` to `~/iac/iac-driver` (#285)
+- Fix server log path and repo discovery for multi-org layout
+- Rename served repo from `site-config` to `config`
 
 ## v0.53 - 2026-03-06
 
