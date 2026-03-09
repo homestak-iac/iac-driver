@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.54 - 2026-03-08
+
 ### Changed
 - Replace `HOMESTAK_SITE_CONFIG`, `HOMESTAK_LIB`, `HOMESTAK_ETC` with single `HOMESTAK_ROOT` anchor (#312)
   - `get_homestak_root()` replaces `get_homestak_lib()` and `get_homestak_etc()` in `common.py`
