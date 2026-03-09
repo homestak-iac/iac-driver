@@ -498,7 +498,7 @@ class SpecVMPullRoundtrip:
             ('wait_spec', WaitForFileAction(
                 name='wait-spec-file',
                 host_key='vm_ip',
-                file_path='~/config/.state/spec.yaml',
+                file_path='~/.state/config/spec.yaml',
                 timeout=150,
                 interval=10,
             ), 'Wait for spec fetch (pull)'),
@@ -506,7 +506,7 @@ class SpecVMPullRoundtrip:
             ('wait_config', WaitForFileAction(
                 name='wait-config-complete',
                 host_key='vm_ip',
-                file_path='~/config/.state/config-complete.json',
+                file_path='~/.state/config/complete.json',
                 timeout=180,
                 interval=10,
             ), 'Wait for config complete (pull)'),

@@ -10,7 +10,6 @@ Used by both ConfigResolver (tofu/ansible) and SpecResolver (server).
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -70,8 +69,8 @@ def discover_etc_path() -> Path:
     Raises:
         ResolverError: If no valid path found
     """
-    root = Path(os.environ.get("HOMESTAK_ROOT", str(Path.home())))
-    config_dir = root / "config"
+    from common import get_homestak_root
+    config_dir: Path = get_homestak_root() / "config"
     if config_dir.is_dir():
         return config_dir
 
