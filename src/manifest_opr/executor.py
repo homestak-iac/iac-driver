@@ -240,11 +240,20 @@ class NodeExecutor:
         logger.info(f"[create] Provisioning node '{mn.name}' on {pve_host}")
 
         # 1. Tofu apply
-        # Only pass spec for pull-mode nodes — spec triggers cloud-init
-        # bootstrap (HOMESTAK_SERVER/HOMESTAK_TOKEN injection). Push-mode
-        # nodes get config from the operator, not from cloud-init.
+        # Determine execution mode and cloud-init apply behavior
         exec_mode = mn.execution_mode or self.manifest.execution_mode
-        tofu_spec = mn.spec if exec_mode == 'pull' else None
+        if mn.type == 'pve' and mn.execution_mode != 'push':
+            # PVE 2-phase self-configure: /config endpoint, not /spec
+            tofu_spec = None
+            tofu_homestak_apply = 'pve-config'
+        elif exec_mode == 'pull':
+            # Pull-mode VM: /spec endpoint + vm-config apply
+            tofu_spec = mn.spec
+            tofu_homestak_apply = 'vm-config'
+        else:
+            # Push mode: no cloud-init config phase
+            tofu_spec = None
+            tofu_homestak_apply = None
         apply_action = TofuApplyAction(
             name=f'provision-{mn.name}',
             vm_name=mn.name,
@@ -252,6 +261,7 @@ class NodeExecutor:
             vm_preset=mn.preset,
             image=mn.image,
             spec=tofu_spec,
+            homestak_apply=tofu_homestak_apply,
             manifest_name=self.manifest.name,
         )
         result = apply_action.run(self.config, context)
@@ -318,13 +328,13 @@ class NodeExecutor:
                 )
 
         # 5. Post-SSH: PVE lifecycle, pull mode wait, or pass-through
-        exec_mode = mn.execution_mode or self.manifest.execution_mode
         if mn.type == 'pve' and ip:
-            # PVE lifecycle requires push: bootstrap install, secrets injection,
-            # bridge config, API token creation, and image download are
-            # multi-step orchestration steps that need the driver's active
-            # participation. A single spec→ansible flow can't cover these.
-            pve_result = self._run_pve_lifecycle(exec_node, ip, context)
+            if mn.execution_mode == 'push':
+                # Explicit push: legacy 11-phase PVE lifecycle via SSH
+                pve_result = self._run_pve_lifecycle(exec_node, ip, context)
+            else:
+                # Default: 2-phase self-configure (pve-config scenario)
+                pve_result = self._wait_for_pve_config(exec_node, ip, context)
             if not pve_result.success:
                 return ActionResult(
                     success=False,
@@ -483,6 +493,83 @@ class NodeExecutor:
         return ActionResult(
             success=True,
             message=f"PVE lifecycle completed for {mn.name}",
+            duration=time.time() - start,
+        )
+
+    def _wait_for_pve_config(
+        self, exec_node: ExecutionNode, ip: str, context: dict, timeout: int = 1200
+    ) -> ActionResult:
+        """Wait for PVE 2-phase self-configure to complete.
+
+        Polls for success/failure markers written by the pve-config scenario
+        running on the PVE node. After success, downloads packer images
+        needed by child nodes.
+
+        Args:
+            exec_node: The PVE ExecutionNode
+            ip: IP address of the PVE node
+            context: Shared execution context
+            timeout: Max seconds to wait (default 1200 — PVE install can take 20 min)
+
+        Returns:
+            ActionResult indicating success/failure
+        """
+        from actions.ssh import WaitForFileAction
+        from actions.file import DownloadGitHubReleaseAction
+        from actions.pve_lifecycle import _image_to_asset_name
+
+        mn = exec_node.manifest_node
+        start = time.time()
+
+        # Ensure IP is in context
+        host_key = f'{mn.name}_ip'
+        context[host_key] = ip
+
+        logger.info(f"[pve-config] Waiting for self-configure on {mn.name} ({ip})...")
+
+        # Poll for success or failure marker
+        wait_action = WaitForFileAction(
+            name=f'wait-pve-config-{mn.name}',
+            host_key=host_key,
+            file_path='~/.state/pve-config/success.json',
+            failure_path='~/.state/pve-config/failure.json',
+            timeout=timeout,
+            interval=30,
+        )
+        wait_result = wait_action.run(self.config, context)
+        if not wait_result.success:
+            return ActionResult(
+                success=False,
+                message=f"PVE self-configure failed on {mn.name}: {wait_result.message}",
+                duration=time.time() - start,
+            )
+
+        logger.info(f"[pve-config] Self-configure completed on {mn.name}")
+
+        # Download packer images for child nodes
+        for child in exec_node.children:
+            child_image = child.manifest_node.image or 'debian-12'
+            child_asset = _image_to_asset_name(child_image)
+            download_action = DownloadGitHubReleaseAction(
+                name=f'download-image-{child.name}',
+                asset_name=child_asset,
+                dest_dir='/var/lib/vz/template/iso',
+                host_key=host_key,
+                rename_ext='.img',
+                timeout=300,
+            )
+            logger.info(f"[pve-config] {mn.name}: download_image_{child.name}")
+            dl_result = download_action.run(self.config, context)
+            if not dl_result.success:
+                return ActionResult(
+                    success=False,
+                    message=f"Image download failed for {child.name}: {dl_result.message}",
+                    duration=time.time() - start,
+                )
+
+        return ActionResult(
+            success=True,
+            message=f"PVE self-configure completed for {mn.name}",
             duration=time.time() - start,
         )
 
@@ -881,6 +968,15 @@ class NodeExecutor:
         mn = exec_node.manifest_node
         logger.info(f"[destroy] Destroying node '{mn.name}'")
 
+        # Match homestak_apply from create for consistent tfvars
+        exec_mode = mn.execution_mode or self.manifest.execution_mode
+        if mn.type == 'pve' and mn.execution_mode != 'push':
+            homestak_apply = 'pve-config'
+        elif exec_mode == 'pull':
+            homestak_apply = 'vm-config'
+        else:
+            homestak_apply = None
+
         destroy_action = TofuDestroyAction(
             name=f'destroy-{mn.name}',
             vm_name=mn.name,
@@ -888,6 +984,7 @@ class NodeExecutor:
             vm_preset=mn.preset,
             image=mn.image,
             spec=mn.spec,
+            homestak_apply=homestak_apply,
             manifest_name=self.manifest.name,
         )
         return destroy_action.run(self.config, context)

@@ -19,6 +19,7 @@ from resolver.base import ResolverError
 from server.tls import TLSConfig, generate_self_signed_cert
 from server.specs import handle_spec_request, handle_specs_list
 from server.repos import RepoManager, handle_repo_request
+from server.config_endpoint import handle_config_request
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ class ServerHandler(BaseHTTPRequestHandler):
     repo_manager: Optional[RepoManager] = None
     repo_token: str = ""
     signing_key: str = ""  # Provisioning token signing key (#231)
+    site_config: dict = {}  # Loaded site.yaml for /config endpoint
+    secrets: dict = {}      # Loaded secrets.yaml for /config endpoint
     _head_only: bool = False
 
     def log_message(self, format: str, *args):  # pylint: disable=redefined-builtin
@@ -80,6 +83,11 @@ class ServerHandler(BaseHTTPRequestHandler):
         # Health check endpoint
         if path == "/health":
             self.send_json({"status": "ok"})
+            return
+
+        # Config endpoint (PVE node pull-mode config distribution, #248)
+        if path.startswith("/config/"):
+            self._handle_config(path)
             return
 
         # Spec endpoints
@@ -128,6 +136,20 @@ class ServerHandler(BaseHTTPRequestHandler):
         auth_header = self.headers.get("Authorization", "")
         response, status = handle_spec_request(
             identity, auth_header, self.spec_resolver, self.signing_key
+        )
+        self.send_json(response, status)
+
+    def _handle_config(self, path: str):
+        """Handle /config/{identity} request."""
+        identity = path[8:]  # Remove "/config/" prefix
+        if not identity:
+            self.send_json({"error": {"code": "E101", "message": "Missing identity"}}, 400)
+            return
+
+        auth_header = self.headers.get("Authorization", "")
+        response, status = handle_config_request(
+            identity, auth_header, self.signing_key,
+            self.site_config, self.secrets,
         )
         self.send_json(response, status)
 
@@ -224,8 +246,8 @@ class Server:
                 raise RuntimeError(f"Repos init failed: {e}") from e
 
         # Load signing key from secrets for provisioning token verification
+        site_config_path = self.spec_resolver.etc_path if self.spec_resolver else get_site_config_dir()
         try:
-            site_config_path = self.spec_resolver.etc_path if self.spec_resolver else get_site_config_dir()
             secrets = _load_secrets(site_config_path) or {}
             signing_key = secrets.get("auth", {}).get("signing_key", "")
             if not signing_key:
@@ -233,6 +255,21 @@ class Server:
         except Exception as e:
             logger.warning("Failed to load signing key: %s — spec auth disabled", e)
             signing_key = ""
+            secrets = {}
+
+        # Load site config and secrets for /config endpoint (#248)
+        try:
+            site_yaml_path = site_config_path / 'site.yaml'
+            if site_yaml_path.exists():
+                from config import _parse_yaml
+                ServerHandler.site_config = _parse_yaml(site_yaml_path)
+            else:
+                ServerHandler.site_config = {}
+        except Exception as e:
+            logger.warning("Failed to load site.yaml: %s", e)
+            ServerHandler.site_config = {}
+
+        ServerHandler.secrets = secrets or {}
 
         # Set handler class attributes
         ServerHandler.spec_resolver = self.spec_resolver

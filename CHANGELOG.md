@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Features
+- Add `/config/{identity}` endpoint for pull-mode config distribution (#248)
+- Add `pve-config` scenario for 2-phase PVE self-configure (#311)
+- Wire `homestak_apply` through ConfigResolver and executor for PVE self-configure (#312)
+- PVE nodes default to 2-phase self-configure; `execution.mode: push` for legacy 11-phase (#312)
+
+### Fixed
+- Use correct ansible inventory for local bridge playbook in pve-config scenario
+- Pass list/dict extra vars to ansible as JSON body format instead of key=value strings
+
 ## v0.56 - 2026-03-09
 
 ### Fixed

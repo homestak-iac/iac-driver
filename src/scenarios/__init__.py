@@ -117,6 +117,8 @@ class Orchestrator:
         phases = self.scenario.get_phases(self.config)
         all_passed = True
         start_time = time.time()
+        last_failed_phase = ''
+        last_failed_message = ''
 
         for phase_name, action, description in phases:
             # Check timeout before starting each phase
@@ -126,6 +128,8 @@ class Orchestrator:
                     logger.error(f"Scenario timeout ({self.timeout}s) exceeded after {elapsed:.1f}s")
                     self.report.fail_phase(phase_name, f"Timeout exceeded ({elapsed:.1f}s >= {self.timeout}s)", 0)
                     all_passed = False
+                    last_failed_phase = phase_name
+                    last_failed_message = f"Timeout exceeded ({elapsed:.1f}s)"
                     break
 
             if phase_name in self.skip_phases:
@@ -146,17 +150,31 @@ class Orchestrator:
                     logger.error(f"Phase {phase_name} failed: {result.message}")
                     self.report.fail_phase(phase_name, result.message, result.duration)
                     all_passed = False
+                    last_failed_phase = phase_name
+                    last_failed_message = result.message
                     if not result.continue_on_failure:
                         break
             except Exception as e:
                 logger.exception(f"Phase {phase_name} raised exception")
                 self.report.fail_phase(phase_name, str(e), 0)
                 all_passed = False
+                last_failed_phase = phase_name
+                last_failed_message = str(e)
                 break
 
         total_time = time.time() - start_time
         logger.info(f"Scenario completed in {total_time:.1f}s")
         self.report.finish(all_passed)
+
+        # Call scenario's on_failure callback if present
+        if not all_passed and hasattr(self.scenario, 'on_failure'):
+            self.context['_failed_phase'] = last_failed_phase
+            self.context['_failed_message'] = last_failed_message
+            try:
+                self.scenario.on_failure(self.config, self.context)
+            except Exception:
+                logger.exception("Scenario on_failure callback raised exception")
+
         return all_passed
 
 
@@ -185,5 +203,6 @@ def list_scenarios() -> list[str]:
 
 # Import scenarios to trigger registration
 from scenarios import pve_setup  # noqa: E402, F401  # pylint: disable=wrong-import-position
+from scenarios import pve_config  # noqa: E402, F401  # pylint: disable=wrong-import-position
 from scenarios import user_setup  # noqa: E402, F401  # pylint: disable=wrong-import-position
 from scenarios import vm_roundtrip  # noqa: E402, F401  # pylint: disable=wrong-import-position

@@ -942,3 +942,173 @@ class TestPushConfig:
 
         assert result.success is False
         assert "Config apply failed" in result.message
+
+
+class TestPveConfigMode:
+    """Tests for PVE 2-phase self-configure mode (#312)."""
+
+    @patch('manifest_opr.executor.NodeExecutor._wait_for_pve_config')
+    @patch('manifest_opr.executor.NodeExecutor._run_pve_lifecycle')
+    @patch('actions.ssh.WaitForSSHAction')
+    @patch('actions.proxmox.WaitForGuestAgentAction')
+    @patch('actions.proxmox.StartVMAction')
+    @patch('actions.tofu.TofuApplyAction')
+    def test_pve_default_uses_self_configure(
+        self, MockTofu, MockStart, MockWait, MockSSH,
+        mock_pve_lifecycle, mock_pve_config,
+    ):
+        """PVE nodes default to 2-phase self-configure (not push lifecycle)."""
+        manifest = _make_manifest([
+            {'name': 'root-pve', 'type': 'pve', 'vmid': 99001,
+             'image': 'pve-9', 'preset': 'vm-large'},
+        ])
+        graph = ManifestGraph(manifest)
+        config = _make_config()
+
+        # Mock all action steps
+        mock_tofu = MagicMock()
+        mock_tofu.run.return_value = _success_result(
+            **{'root-pve_vm_id': 99001})
+        MockTofu.return_value = mock_tofu
+
+        mock_start = MagicMock()
+        mock_start.run.return_value = _success_result()
+        MockStart.return_value = mock_start
+
+        mock_wait = MagicMock()
+        mock_wait.run.return_value = _success_result(
+            **{'root-pve_ip': '198.51.100.10'})
+        MockWait.return_value = mock_wait
+
+        mock_ssh = MagicMock()
+        mock_ssh.run.return_value = _success_result()
+        MockSSH.return_value = mock_ssh
+
+        mock_pve_config.return_value = _success_result()
+
+        executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
+        exec_node = graph.get_node('root-pve')
+        result = executor._create_node(exec_node, {})
+
+        assert result.success is True
+        mock_pve_config.assert_called_once()
+        mock_pve_lifecycle.assert_not_called()
+
+    @patch('manifest_opr.executor.NodeExecutor._wait_for_pve_config')
+    @patch('manifest_opr.executor.NodeExecutor._run_pve_lifecycle')
+    @patch('actions.ssh.WaitForSSHAction')
+    @patch('actions.proxmox.WaitForGuestAgentAction')
+    @patch('actions.proxmox.StartVMAction')
+    @patch('actions.tofu.TofuApplyAction')
+    def test_pve_explicit_push_uses_lifecycle(
+        self, MockTofu, MockStart, MockWait, MockSSH,
+        mock_pve_lifecycle, mock_pve_config,
+    ):
+        """PVE node with explicit execution.mode: push uses 11-phase lifecycle."""
+        manifest = _make_manifest([
+            {'name': 'root-pve', 'type': 'pve', 'vmid': 99001,
+             'image': 'pve-9', 'preset': 'vm-large',
+             'execution': {'mode': 'push'}},
+        ])
+        graph = ManifestGraph(manifest)
+        config = _make_config()
+
+        mock_tofu = MagicMock()
+        mock_tofu.run.return_value = _success_result(
+            **{'root-pve_vm_id': 99001})
+        MockTofu.return_value = mock_tofu
+
+        mock_start = MagicMock()
+        mock_start.run.return_value = _success_result()
+        MockStart.return_value = mock_start
+
+        mock_wait = MagicMock()
+        mock_wait.run.return_value = _success_result(
+            **{'root-pve_ip': '198.51.100.10'})
+        MockWait.return_value = mock_wait
+
+        mock_ssh = MagicMock()
+        mock_ssh.run.return_value = _success_result()
+        MockSSH.return_value = mock_ssh
+
+        mock_pve_lifecycle.return_value = _success_result()
+
+        executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
+        exec_node = graph.get_node('root-pve')
+        result = executor._create_node(exec_node, {})
+
+        assert result.success is True
+        mock_pve_lifecycle.assert_called_once()
+        mock_pve_config.assert_not_called()
+
+    @patch('actions.tofu.TofuApplyAction')
+    def test_pve_self_configure_passes_homestak_apply(self, MockTofu):
+        """PVE self-configure passes homestak_apply='pve-config' to TofuApplyAction."""
+        manifest = _make_manifest([
+            {'name': 'root-pve', 'type': 'pve', 'vmid': 99001,
+             'image': 'pve-9', 'preset': 'vm-large'},
+        ])
+        graph = ManifestGraph(manifest)
+        config = _make_config()
+
+        mock_tofu = MagicMock()
+        mock_tofu.run.return_value = _fail_result('expected')
+        MockTofu.return_value = mock_tofu
+
+        executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
+        exec_node = graph.get_node('root-pve')
+        executor._create_node(exec_node, {})
+
+        # Check TofuApplyAction was created with homestak_apply
+        call_kwargs = MockTofu.call_args[1] if MockTofu.call_args[1] else {}
+        call_args = MockTofu.call_args
+        # TofuApplyAction is created with keyword args
+        assert call_kwargs.get('homestak_apply') == 'pve-config'
+        assert call_kwargs.get('spec') is None
+
+    @patch('actions.ssh.WaitForFileAction')
+    def test_wait_for_pve_config_success(self, MockWaitFile):
+        """_wait_for_pve_config polls for success marker."""
+        manifest = _make_manifest([
+            {'name': 'root-pve', 'type': 'pve', 'vmid': 99001,
+             'image': 'pve-9', 'preset': 'vm-large'},
+        ])
+        graph = ManifestGraph(manifest)
+        config = _make_config()
+
+        mock_wait = MagicMock()
+        mock_wait.run.return_value = _success_result()
+        MockWaitFile.return_value = mock_wait
+
+        executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
+        exec_node = graph.get_node('root-pve')
+
+        result = executor._wait_for_pve_config(exec_node, '198.51.100.10', {})
+
+        assert result.success is True
+        # Verify WaitForFileAction was created with failure_path
+        call_kwargs = MockWaitFile.call_args[1]
+        assert 'success.json' in call_kwargs['file_path']
+        assert 'failure.json' in call_kwargs['failure_path']
+
+    @patch('actions.ssh.WaitForFileAction')
+    def test_wait_for_pve_config_failure(self, MockWaitFile):
+        """_wait_for_pve_config reports failure when marker polling fails."""
+        manifest = _make_manifest([
+            {'name': 'root-pve', 'type': 'pve', 'vmid': 99001,
+             'image': 'pve-9', 'preset': 'vm-large'},
+        ])
+        graph = ManifestGraph(manifest)
+        config = _make_config()
+
+        mock_wait = MagicMock()
+        mock_wait.run.return_value = _fail_result('Failure marker found')
+        MockWaitFile.return_value = mock_wait
+
+        executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
+        exec_node = graph.get_node('root-pve')
+
+        result = executor._wait_for_pve_config(exec_node, '198.51.100.10', {})
+
+        assert result.success is False
+        assert 'self-configure failed' in result.message

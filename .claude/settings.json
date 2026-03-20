@@ -1,5 +1,4 @@
 {
-  "_comment": "E2E test permissions for iac-driver. Merge with global ~/.claude/settings.json",
   "permissions": {
     "allow": [
       "__ Infrastructure as Code __",
@@ -18,7 +17,7 @@
       "Bash(ssh:*)",
       "Bash(scp:*)",
 
-      "__ E2E Scripts __",
+      "__ Scripts __",
       "Bash(./scripts/generate-test-summary.sh:*)",
       "Bash(./scripts/wait-for-guest-agent.sh:*)",
       "Bash(./scripts/setup-tools.sh:*)",
