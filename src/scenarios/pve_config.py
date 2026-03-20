@@ -107,9 +107,15 @@ class _ConfigureBridgePhase:
         except Exception:  # pylint: disable=broad-except
             pass  # Best effort — bridge still works without DNS
 
+        # pve-network.yml targets 'hosts: target' which only matches
+        # remote-dev.yml inventory (not local.yml). Use remote-dev with
+        # local connection overrides so ansible targets localhost.
+        extra_vars['ansible_host'] = '127.0.0.1'
+        extra_vars['ansible_connection'] = 'local'
         action = AnsibleLocalPlaybookAction(
             name='configure-bridge-local',
             playbook='playbooks/pve-network.yml',
+            inventory='inventory/remote-dev.yml',
             extra_vars=extra_vars,
         )
         return action.run(_config, _context)
