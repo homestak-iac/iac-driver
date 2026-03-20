@@ -85,17 +85,34 @@ class _ConfigureBridgePhase:
 
     Runs the ansible pve-network.yml playbook with bridge task.
     The networking role auto-detects the primary interface and creates
-    vmbr0. Idempotent — skips if vmbr0 already exists.
+    vmbr0. Passes dns_servers from site.yaml so systemd-resolved
+    is configured on the bridge interface.
+    Idempotent — skips if vmbr0 already exists.
     """
 
-    def run(self, config: HostConfig, context: dict) -> ActionResult:
+    def run(self, _config: HostConfig, _context: dict) -> ActionResult:
         """Configure bridge locally via ansible."""
+        # Read dns_servers from site.yaml (fetched by ConfigFetchAction)
+        extra_vars: dict = {'pve_network_tasks': '["bridge"]'}
+        try:
+            import yaml  # pylint: disable=import-outside-toplevel
+            site_config_dir = get_site_config_dir()
+            site_file = site_config_dir / 'site.yaml'
+            if site_file.exists():
+                with open(site_file, encoding='utf-8') as f:
+                    site = yaml.safe_load(f) or {}
+                dns_servers = site.get('defaults', {}).get('dns_servers', [])
+                if dns_servers:
+                    extra_vars['pve_dns_servers'] = json.dumps(dns_servers)
+        except Exception:  # pylint: disable=broad-except
+            pass  # Best effort — bridge still works without DNS
+
         action = AnsibleLocalPlaybookAction(
             name='configure-bridge-local',
             playbook='playbooks/pve-network.yml',
-            extra_vars={'pve_network_tasks': '["bridge"]'},
+            extra_vars=extra_vars,
         )
-        return action.run(config, context)
+        return action.run(_config, _context)
 
 
 class _GenerateNodeConfigInlinePhase:
