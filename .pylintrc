@@ -16,6 +16,7 @@ disable=
     too-many-instance-attributes,
     too-many-return-statements,
     too-many-positional-arguments,
+    too-many-lines,
     # Design patterns we use intentionally
     too-few-public-methods,
     # f-strings in logging are fine in Python 3.11+ with lazy evaluation

@@ -373,6 +373,64 @@ class TestProvisioningTokenResolution:
 
         assert config['vms'][0]['auth_token'] == ''
 
+    def test_resolve_inline_vm_mints_token_with_homestak_apply(self, site_config_dir):
+        """resolve_inline_vm mints config token when homestak_apply set (no spec)."""
+        resolver = ConfigResolver(str(site_config_dir))
+        config = resolver.resolve_inline_vm(
+            node='test-node',
+            vm_name='pve-node',
+            vmid=99900,
+            vm_preset='vm-small',
+            image='pve-9',
+            homestak_apply='pve-config',
+        )
+
+        token = config['vms'][0]['auth_token']
+        # Token should be non-empty (minted for /config endpoint)
+        assert token != ''
+        assert '.' in token
+
+    def test_resolve_inline_vm_homestak_apply_in_vm_dict(self, site_config_dir):
+        """resolve_inline_vm includes homestak_apply in resolved VM dict."""
+        resolver = ConfigResolver(str(site_config_dir))
+        config = resolver.resolve_inline_vm(
+            node='test-node',
+            vm_name='pve-node',
+            vmid=99900,
+            vm_preset='vm-small',
+            image='pve-9',
+            homestak_apply='pve-config',
+        )
+        assert config['vms'][0]['homestak_apply'] == 'pve-config'
+
+    def test_resolve_inline_vm_homestak_apply_defaults_empty(self, site_config_dir):
+        """resolve_inline_vm defaults homestak_apply to empty string."""
+        resolver = ConfigResolver(str(site_config_dir))
+        config = resolver.resolve_inline_vm(
+            node='test-node',
+            vm_name='test-vm',
+            vmid=99900,
+            vm_preset='vm-small',
+            image='debian-12.img',
+        )
+        assert config['vms'][0]['homestak_apply'] == ''
+
+    def test_resolve_inline_vm_vm_config_apply(self, site_config_dir):
+        """resolve_inline_vm with vm-config uses spec for token."""
+        resolver = ConfigResolver(str(site_config_dir))
+        config = resolver.resolve_inline_vm(
+            node='test-node',
+            vm_name='pull-vm',
+            vmid=99900,
+            vm_preset='vm-small',
+            image='debian-12.img',
+            spec='base',
+            homestak_apply='vm-config',
+        )
+        # With spec, token is minted from spec (not homestak_apply)
+        assert config['vms'][0]['auth_token'] != ''
+        assert config['vms'][0]['homestak_apply'] == 'vm-config'
+
 
 class TestPosturesAuthModel:
     """Test posture auth model loading."""

@@ -144,6 +144,7 @@ class ConfigResolver:
         vm_preset: Optional[str] = None,
         image: Optional[str] = None,
         spec: Optional[str] = None,
+        homestak_apply: Optional[str] = None,
     ) -> dict:
         """Resolve inline VM definition.
 
@@ -157,6 +158,7 @@ class ConfigResolver:
             vm_preset: Preset name (matches presets/{vm_preset}.yaml)
             image: Image name (required for vm_preset mode)
             spec: Spec FK for provisioning token (specs/{spec}.yaml)
+            homestak_apply: Cloud-init apply behavior ('vm-config' or 'pve-config')
 
         Returns:
             Dict with all resolved config ready for tfvars.json
@@ -200,9 +202,16 @@ class ConfigResolver:
 
         # Resolve the single VM
         resolved_vm = self._resolve_vm(vm_instance, vmid, defaults)
-        # Mint provisioning token if spec server and spec FK are configured (#231)
+
+        # Cloud-init apply behavior (vm-config, pve-config, or empty)
+        resolved_vm["homestak_apply"] = homestak_apply or ""
+
+        # Mint provisioning token if spec server and spec/apply are configured
         if spec_server and spec:
             resolved_vm["auth_token"] = self._mint_provisioning_token(vm_name, spec)
+        elif spec_server and homestak_apply:
+            # PVE self-configure: token for /config endpoint (s claim unused)
+            resolved_vm["auth_token"] = self._mint_provisioning_token(vm_name, 'config')
         else:
             resolved_vm["auth_token"] = ""
 
