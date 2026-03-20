@@ -95,9 +95,11 @@ make decrypt  # Decrypt secrets (requires age key)
 │   │   │   ├── proxmox.py# StartVMAction, WaitForGuestAgentAction
 │   │   │   ├── file.py   # DownloadFileAction, RemoveImageAction
 │   │   │   ├── recursive.py   # RecursiveScenarioAction
+│   │   │   ├── config_pull.py # ConfigFetchAction, WriteMarkerAction
 │   │   │   └── pve_lifecycle.py # PVE lifecycle actions (bootstrap, secrets, bridge, etc.)
 │   │   ├── scenarios/    # Workflow definitions
 │   │   │   ├── pve_setup.py         # pve-setup (local/remote)
+│   │   │   ├── pve_config.py        # pve-config (2-phase self-configure)
 │   │   │   ├── user_setup.py        # user-setup (local/remote)
 │   │   │   └── vm_roundtrip.py       # push-vm-roundtrip, pull-vm-roundtrip
 │   │   └── reporting/    # Test report generation (JSON + markdown)
@@ -326,7 +328,7 @@ Nodes use **push** (default) or **pull** for config phase. See [config-phase.md]
 | `push` | Operator runs ansible from controller over SSH | Default; no spec injection in cloud-init |
 | `pull` | VM self-configures via cloud-init | Operator polls for complete.json |
 
-PVE nodes use a hybrid model: bootstrap and config distribution pull from the parent's server, while lifecycle orchestration (pve-setup, bridge config, API token, etc.) uses push via SSH. Push-mode nodes skip spec injection in cloud-init to avoid bootstrap race conditions.
+PVE nodes default to **2-phase self-configure**: cloud-init bootstraps and starts a systemd oneshot service (`pve-config.service`) that runs `./run.sh scenario run pve-config --local`. The operator polls for success/failure markers via `WaitForFileAction`. Set `execution.mode: push` on a PVE node to use the legacy 11-phase SSH push lifecycle. See [pve-self-configure.md](../docs/designs/pve-self-configure.md) for design rationale. Push-mode VM nodes skip spec injection in cloud-init to avoid bootstrap race conditions.
 
 ## Manifest-Driven Orchestration
 
@@ -348,7 +350,7 @@ Manifests define N-level tiered PVE deployments using graph-based schema v2. Man
 
 | Type | Pattern | Examples |
 |------|---------|----------|
-| **Scenarios** | `noun-verb` | `pve-setup`, `user-setup`, `push-vm-roundtrip` |
+| **Scenarios** | `noun-verb` | `pve-setup`, `pve-config`, `user-setup`, `push-vm-roundtrip` |
 | **Phases** | `verb_noun` | `ensure_pve`, `setup_pve`, `provision_vm`, `create_user` |
 | **Actions** | `VerbNounAction` | `EnsurePVEAction`, `StartVMAction`, `WaitForSSHAction` |
 
@@ -451,9 +453,19 @@ Use `--json-output` for structured JSON to stdout (logs to stderr). Use `--dry-r
 | Scenario | Runtime | Description |
 |----------|---------|-------------|
 | `pve-setup` | ~3m | Install PVE (if needed), configure host, create API token, generate node config |
+| `pve-config` | ~10m | 2-phase PVE self-configure: fetch config, install PVE, bridge, API token, SSH key |
 | `user-setup` | ~30s | Create homestak user |
 | `push-vm-roundtrip` | ~3m | Spec discovery integration test (push verification) |
 | `pull-vm-roundtrip` | ~5m | Config phase integration test (pull verification) |
+
+**pve-config details:**
+- 2-phase model: Phase 1 is cloud-init bootstrap (creates systemd oneshot service), Phase 2 is local execution of the pve-config scenario.
+- Fetches site.yaml, secrets.yaml, and private key from parent's `/config/{identity}` endpoint via `ConfigFetchAction`.
+- Reuses phases from pve-setup (ensure_pve, setup_pve, generate_node_config, create_api_token).
+- Configures vmbr0 bridge locally via ansible `pve-network.yml`.
+- Injects own SSH public key into secrets.yaml for child VMs.
+- Writes success/failure markers for parent polling; `on_failure` callback writes failure marker.
+- `requires_host_config = False` — runs before node config exists.
 
 **pve-setup details:**
 - Splits PVE installation into kernel and packages phases with idempotent re-entry. If a reboot is needed after kernel installation, the operator re-enters and continues from the packages phase (detected via `dpkg -l` state).
@@ -523,6 +535,7 @@ Detailed architecture and design rationale:
 | [server-daemon.md](../docs/designs/server-daemon.md) | Daemon architecture, PID management, operator integration |
 | [config-phase.md](../docs/designs/config-phase.md) | Push/pull execution, spec-to-ansible mapping |
 | [provisioning-token.md](../docs/designs/provisioning-token.md) | HMAC token format, signing, verification |
+| [pve-self-configure.md](../docs/designs/pve-self-configure.md) | 2-phase PVE self-configure model, pve-config scenario |
 | [scenario-consolidation.md](../docs/designs/scenario-consolidation.md) | Scenario migration, PVE lifecycle phases |
 | [node-lifecycle.md](../docs/designs/node-lifecycle.md) | Single-node lifecycle (create/config/run/destroy) |
 | [test-strategy.md](../docs/designs/test-strategy.md) | Test hierarchy, system test catalog (ST-1 through ST-8) |
