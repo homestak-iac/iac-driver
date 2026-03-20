@@ -2,25 +2,29 @@
   "permissions": {
     "allow": [
       "__ Infrastructure as Code __",
-      "Bash(tofu:*)",
-      "Bash(ansible:*)",
-      "Bash(ansible-playbook:*)",
-      "Bash(packer:*)",
+      "Bash(tofu *)",
+      "Bash(ansible *)",
+      "Bash(ansible-playbook *)",
+      "Bash(packer *)",
 
       "__ Proxmox __",
-      "Bash(qm:*)",
-      "Bash(pct:*)",
-      "Bash(pvesh:*)",
-      "Bash(pveum:*)",
+      "Bash(qm *)",
+      "Bash(pct *)",
+      "Bash(pvesh *)",
+      "Bash(pveum *)",
 
       "__ Networking __",
-      "Bash(ssh:*)",
-      "Bash(scp:*)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(rsync *)",
 
       "__ Scripts __",
-      "Bash(./scripts/generate-test-summary.sh:*)",
-      "Bash(./scripts/wait-for-guest-agent.sh:*)",
-      "Bash(./scripts/setup-tools.sh:*)",
+      "Bash(./run.sh *)",
+      "Bash(./scripts/wait-for-guest-agent.sh *)",
+      "Bash(./scripts/setup-tools.sh *)",
+
+      "__ Build __",
+      "Bash(make *)",
 
       "__ Required reads __",
       "Read(/root/.ssh/**)",
