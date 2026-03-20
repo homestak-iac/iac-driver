@@ -28,6 +28,7 @@ from actions.pve_lifecycle import (
     ConfigureNetworkBridgeAction,
     GenerateNodeConfigAction,
 )
+from actions.config_pull import ConfigFetchAction, WriteMarkerAction
 
 __all__ = [
     'TofuApplyAction',
@@ -59,4 +60,6 @@ __all__ = [
     'InjectSelfSSHKeyAction',
     'ConfigureNetworkBridgeAction',
     'GenerateNodeConfigAction',
+    'ConfigFetchAction',
+    'WriteMarkerAction',
 ]

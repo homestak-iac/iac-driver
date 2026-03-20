@@ -111,15 +111,21 @@ class WaitForSSHAction:
 
 @dataclass
 class WaitForFileAction:
-    """Poll for a file to exist on a remote host via SSH."""
+    """Poll for a file to exist on a remote host via SSH.
+
+    When failure_path is set, also checks for a failure marker each
+    interval. If the failure file appears first, returns failure
+    immediately instead of waiting for the full timeout.
+    """
     name: str
     host_key: str
     file_path: str
+    failure_path: Optional[str] = None
     timeout: int = 300
     interval: int = 10
 
     def run(self, config: HostConfig, context: dict) -> ActionResult:
-        """Poll until file exists or timeout."""
+        """Poll until file exists, failure detected, or timeout."""
         start = time.time()
 
         host = context.get(self.host_key)
@@ -134,6 +140,7 @@ class WaitForFileAction:
 
         deadline = time.time() + self.timeout
         while time.time() < deadline:
+            # Check for success file
             rc, out, _ = run_ssh(
                 host,
                 f'test -f {self.file_path} && echo EXISTS',
@@ -147,6 +154,23 @@ class WaitForFileAction:
                     message=f"File {self.file_path} found on {host}",
                     duration=time.time() - start,
                 )
+
+            # Check for failure file (early exit)
+            if self.failure_path:
+                rc, out, _ = run_ssh(
+                    host,
+                    f'test -f {self.failure_path} && cat {self.failure_path}',
+                    user=config.automation_user,
+                    timeout=10,
+                )
+                if rc == 0 and out.strip():
+                    logger.error(f"[{self.name}] Failure marker found: {self.failure_path}")
+                    return ActionResult(
+                        success=False,
+                        message=f"Failure marker found on {host}: {out.strip()[:200]}",
+                        duration=time.time() - start,
+                    )
+
             logger.debug(f"File not found yet, retrying in {self.interval}s...")
             time.sleep(self.interval)
 
