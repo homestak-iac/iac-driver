@@ -49,16 +49,16 @@ class HostConfig:
     automation_user: str = 'homestak'  # For SSH to VMs (created via cloud-init)
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')
 
-    # Packer release settings
-    packer_release_repo: str = 'homestak-iac/packer'
-    packer_release: str = 'latest'
+    # Image release settings
+    image_release_repo: str = 'homestak-iac/packer'
+    image_release: str = 'latest'
     packer_image: str = 'debian-12.qcow2'
 
     # DNS servers from site.yaml (for bridge config, #229)
     dns_servers: list = field(default_factory=list)
 
-    # Spec server URL from site.yaml defaults (e.g., "https://controller:44443")
-    spec_server: str = ''
+    # Server URL from site.yaml defaults (e.g., "https://controller:44443")
+    server_url: str = ''
 
     # Track config source type
     is_host_only: bool = False  # True when loaded from hosts/*.yaml (no PVE)
@@ -120,17 +120,17 @@ class HostConfig:
         if automation_user := site_defaults.get('automation_user'):
             self.automation_user = automation_user
 
-        # Packer release: site.yaml > default
-        if packer_release := site_defaults.get('packer_release'):
-            self.packer_release = packer_release
+        # Image release: site.yaml > default
+        if image_release := site_defaults.get('image_release'):
+            self.image_release = image_release
 
         # DNS servers: site.yaml (for bridge config, #229)
         if dns_servers := site_defaults.get('dns_servers'):
             self.dns_servers = dns_servers
 
-        # Spec server URL: site.yaml (for server daemon management, #203)
-        if spec_server := site_defaults.get('spec_server'):
-            self.spec_server = spec_server
+        # Server URL: site.yaml (for server daemon management, #203)
+        if server_url := site_defaults.get('server_url'):
+            self.server_url = server_url
 
     def _load_from_host_yaml(self):
         """Load configuration from hosts/*.yaml (SSH-only, pre-PVE).
@@ -175,17 +175,17 @@ class HostConfig:
         if automation_user := site_defaults.get('automation_user'):
             self.automation_user = automation_user
 
-        # Packer release: site.yaml > default
-        if packer_release := site_defaults.get('packer_release'):
-            self.packer_release = packer_release
+        # Image release: site.yaml > default
+        if image_release := site_defaults.get('image_release'):
+            self.image_release = image_release
 
         # DNS servers: site.yaml (for bridge config, #229)
         if dns_servers := site_defaults.get('dns_servers'):
             self.dns_servers = dns_servers
 
-        # Spec server URL: site.yaml (for server daemon management, #203)
-        if spec_server := site_defaults.get('spec_server'):
-            self.spec_server = spec_server
+        # Server URL: site.yaml (for server daemon management, #203)
+        if server_url := site_defaults.get('server_url'):
+            self.server_url = server_url
 
         # No api_endpoint or api_token for host-only configs
         # These remain empty strings (defaults)

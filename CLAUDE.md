@@ -156,7 +156,7 @@ resolver.write_ansible_vars(ansible_vars, '/tmp/ansible-vars.json')
     "datastore": "local-zfs",
     "root_password": "$6$...",
     "ssh_keys": ["ssh-rsa ...", ...],
-    "spec_server": "https://srv1:44443",
+    "server_url": "https://srv1:44443",
     "vms": [
         {
             "name": "test",
@@ -172,7 +172,7 @@ resolver.write_ansible_vars(ansible_vars, '/tmp/ansible-vars.json')
 }
 ```
 
-Per-VM `auth_token` is an HMAC-SHA256 provisioning token minted by `ConfigResolver._mint_provisioning_token()` when both `spec_server` and `spec` are set. See [provisioning-token.md](../docs/designs/provisioning-token.md) for token format, signing, and verification.
+Per-VM `auth_token` is an HMAC-SHA256 provisioning token minted by `ConfigResolver._mint_provisioning_token()` when both `server_url` and `spec` are set. See [provisioning-token.md](../docs/designs/provisioning-token.md) for token format, signing, and verification.
 
 **Auto-generated signing key:** During `pve-setup`, if `secrets.auth.signing_key` is empty or missing, it is auto-generated (256-bit hex via `secrets.token_hex(32)`) and written to `secrets.yaml`. This eliminates a manual setup step for the create -> config flow.
 

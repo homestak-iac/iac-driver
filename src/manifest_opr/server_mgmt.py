@@ -1,7 +1,7 @@
 """Server lifecycle management for the operator.
 
 Manages the spec/repo server daemon used during manifest operations.
-Handles start/stop with reference counting, HOMESTAK_SOURCE env var
+Handles start/stop with reference counting, HOMESTAK_SERVER env var
 propagation, and address resolution for nested deployments.
 """
 
@@ -29,7 +29,7 @@ class ServerManager:
         ssh_host: SSH host for the target PVE node
         ssh_user: SSH user for the target PVE node
         self_addr: Explicit routable address (from --self-addr)
-        port: Server port (default: 44443, or extracted from spec_server URL)
+        port: Server port (default: 44443, or extracted from server_url)
     """
 
     def __init__(self, ssh_host: str, ssh_user: str,
@@ -133,20 +133,20 @@ class ServerManager:
         self._started = False
 
     @staticmethod
-    def resolve_port(spec_server: str) -> int:
-        """Extract port from a spec_server URL, or return default.
+    def resolve_port(server_url: str) -> int:
+        """Extract port from a server URL, or return default.
 
         Args:
-            spec_server: URL like "https://controller:44443"
+            server_url: URL like "https://controller:44443"
 
         Returns:
             Extracted port or DEFAULT_SERVER_PORT
         """
-        if not spec_server:
+        if not server_url:
             return DEFAULT_SERVER_PORT
         try:
             from urllib.parse import urlparse
-            parsed = urlparse(spec_server)
+            parsed = urlparse(server_url)
             if parsed.port:
                 return int(parsed.port)
         except Exception:  # pylint: disable=broad-except
@@ -173,7 +173,7 @@ class ServerManager:
 
     @staticmethod
     def validate_addr(addr: str, source: str) -> str:
-        """Validate an address provided for HOMESTAK_SOURCE.
+        """Validate an address provided for HOMESTAK_SERVER.
 
         Args:
             addr: IP address or hostname to validate
@@ -214,7 +214,7 @@ class ServerManager:
         return None
 
     def _set_source_env(self, host: str) -> None:
-        """Set HOMESTAK_SOURCE env vars so downstream actions use serve-repos.
+        """Set HOMESTAK_SERVER env var so downstream actions use serve-repos.
 
         When host is loopback, resolves to a routable address using:
         1. --self-addr CLI arg or HOMESTAK_SELF_ADDR env var
@@ -232,33 +232,33 @@ class ServerManager:
                     explicit, '--self-addr / HOMESTAK_SELF_ADDR')
                 logger.info(
                     "Using explicit address %s instead of loopback %s "
-                    "for HOMESTAK_SOURCE", addr, host,
+                    "for HOMESTAK_SERVER", addr, host,
                 )
             else:
                 detected = self.detect_external_ip()
                 if detected:
                     addr = detected
                     logger.info(
-                        "Auto-detected IP %s for HOMESTAK_SOURCE", addr,
+                        "Auto-detected IP %s for HOMESTAK_SERVER", addr,
                     )
                 else:
                     logger.warning(
                         "Could not detect external IP; using loopback %s "
-                        "for HOMESTAK_SOURCE (child VMs will not be able "
+                        "for HOMESTAK_SERVER (child VMs will not be able "
                         "to reach this address — use --self-addr or "
                         "HOMESTAK_SELF_ADDR to set a routable address)",
                         host,
                     )
-        os.environ['HOMESTAK_SOURCE'] = f'https://{addr}:{self.port}'
+        os.environ['HOMESTAK_SERVER'] = f'https://{addr}:{self.port}'
         os.environ.setdefault('HOMESTAK_REF', '_working')
         logger.info(
-            "Set HOMESTAK_SOURCE=https://%s:%d (ref=%s)",
+            "Set HOMESTAK_SERVER=https://%s:%d (ref=%s)",
             addr, self.port, os.environ.get('HOMESTAK_REF'),
         )
 
     @staticmethod
     def _clear_source_env() -> None:
-        """Clear HOMESTAK_SOURCE env vars set by _set_source_env."""
-        for var in ('HOMESTAK_SOURCE', 'HOMESTAK_REF'):
+        """Clear HOMESTAK_SERVER env vars set by _set_source_env."""
+        for var in ('HOMESTAK_SERVER', 'HOMESTAK_REF'):
             os.environ.pop(var, None)
-        logger.debug("Cleared HOMESTAK_SOURCE env vars")
+        logger.debug("Cleared HOMESTAK_SERVER env vars")

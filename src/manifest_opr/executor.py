@@ -56,12 +56,12 @@ class NodeExecutor:
 
     def __post_init__(self) -> None:
         """Initialize the server manager after dataclass init."""
-        spec_server = getattr(self.config, 'spec_server', '') or ''
+        server_url = getattr(self.config, 'server_url', '') or ''
         self._server = ServerManager(
             ssh_host=self.config.ssh_host,
             ssh_user=self.config.automation_user,
             self_addr=self.self_addr,
-            port=ServerManager.resolve_port(spec_server),
+            port=ServerManager.resolve_port(server_url),
         )
 
     def create(self, context: dict) -> tuple[bool, ExecutionState]:
@@ -245,15 +245,15 @@ class NodeExecutor:
         if mn.type == 'pve' and mn.execution_mode != 'push':
             # PVE 2-phase self-configure: /config endpoint, not /spec
             tofu_spec = None
-            tofu_homestak_apply = 'pve-config'
+            tofu_boot_scenario = 'pve-config'
         elif exec_mode == 'pull':
             # Pull-mode VM: /spec endpoint + vm-config apply
             tofu_spec = mn.spec
-            tofu_homestak_apply = 'vm-config'
+            tofu_boot_scenario = 'vm-config'
         else:
             # Push mode: no cloud-init config phase
             tofu_spec = None
-            tofu_homestak_apply = None
+            tofu_boot_scenario = None
         apply_action = TofuApplyAction(
             name=f'provision-{mn.name}',
             vm_name=mn.name,
@@ -261,7 +261,7 @@ class NodeExecutor:
             vm_preset=mn.preset,
             image=mn.image,
             spec=tofu_spec,
-            homestak_apply=tofu_homestak_apply,
+            boot_scenario=tofu_boot_scenario,
             manifest_name=self.manifest.name,
         )
         result = apply_action.run(self.config, context)
@@ -884,7 +884,7 @@ class NodeExecutor:
 
         # Build raw command for delegation
         # Pass --self-addr so the inner executor knows its routable address
-        # for HOMESTAK_SOURCE (avoids localhost propagation, #200)
+        # for HOMESTAK_SERVER (avoids localhost propagation, #200)
         raw_cmd = (
             f'cd ~/iac/iac-driver && '
             f'./run.sh manifest apply '
@@ -968,14 +968,14 @@ class NodeExecutor:
         mn = exec_node.manifest_node
         logger.info(f"[destroy] Destroying node '{mn.name}'")
 
-        # Match homestak_apply from create for consistent tfvars
+        # Match boot_scenario from create for consistent tfvars
         exec_mode = mn.execution_mode or self.manifest.execution_mode
         if mn.type == 'pve' and mn.execution_mode != 'push':
-            homestak_apply = 'pve-config'
+            boot_scenario = 'pve-config'
         elif exec_mode == 'pull':
-            homestak_apply = 'vm-config'
+            boot_scenario = 'vm-config'
         else:
-            homestak_apply = None
+            boot_scenario = None
 
         destroy_action = TofuDestroyAction(
             name=f'destroy-{mn.name}',
@@ -984,7 +984,7 @@ class NodeExecutor:
             vm_preset=mn.preset,
             image=mn.image,
             spec=mn.spec,
-            homestak_apply=homestak_apply,
+            boot_scenario=boot_scenario,
             manifest_name=self.manifest.name,
         )
         return destroy_action.run(self.config, context)

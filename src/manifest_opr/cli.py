@@ -73,7 +73,7 @@ def _common_parser(verb: str) -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--self-addr',
-        help='Routable address of this host for HOMESTAK_SOURCE '
+        help='Routable address of this host for HOMESTAK_SERVER '
              '(override: HOMESTAK_SELF_ADDR env var)',
     )
     return parser

@@ -20,8 +20,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'v0.20'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
         with patch('actions.file.run_ssh') as mock_ssh:
@@ -48,8 +48,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'v0.20'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'v0.20'
         context = {}
 
         result = action.run(config, context)
@@ -68,8 +68,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'v0.20'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
         with patch('actions.file.run_ssh') as mock_ssh:
@@ -101,8 +101,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'v0.20'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
         with patch('actions.file.run_ssh') as mock_ssh:
@@ -131,8 +131,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'v0.20'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
         with patch('actions.file.run_ssh') as mock_ssh:
@@ -157,8 +157,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'latest'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'latest'
         context = {'node_ip': '192.0.2.1'}
 
         with patch('actions.file.run_ssh') as mock_ssh:
@@ -188,8 +188,8 @@ class TestDownloadGitHubReleaseAction:
         )
 
         config = MagicMock()
-        config.packer_release_repo = 'homestak-iac/packer'
-        config.packer_release = 'v0.20'
+        config.image_release_repo = 'homestak-iac/packer'
+        config.image_release = 'v0.20'
         context = {'node_ip': '192.0.2.1'}
 
         with patch('actions.file.run_ssh') as mock_ssh:

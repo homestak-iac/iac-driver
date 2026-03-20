@@ -73,8 +73,8 @@ class EnsureImageAction:
             )
 
         # Download from release
-        repo = config.packer_release_repo
-        tag = config.packer_release
+        repo = config.image_release_repo
+        tag = config.image_release
         url = f'https://github.com/{repo}/releases/download/{tag}/{config.packer_image}'
 
         logger.info(f"[{self.name}] Downloading {config.packer_image} from {repo} {tag}...")
@@ -269,10 +269,10 @@ class BootstrapAction:
     """Bootstrap homestak on a remote host.
 
     Runs the bootstrap curl|bash installer on a target host. Integrates with
-    serve-repos infrastructure when HOMESTAK_SOURCE env var is set.
+    serve-repos infrastructure when HOMESTAK_SERVER env var is set.
 
     Environment variables (from --serve-repos):
-    - HOMESTAK_SOURCE: HTTP server URL for local repo access
+    - HOMESTAK_SERVER: Server URL for local repo access
     - HOMESTAK_TOKEN: Bearer token for authentication
     - HOMESTAK_REF: Git ref to use (default: _working)
     """
@@ -295,7 +295,7 @@ class BootstrapAction:
             )
 
         # Check for serve-repos env vars (dev workflow)
-        env_source = os.environ.get('HOMESTAK_SOURCE')
+        env_source = os.environ.get('HOMESTAK_SERVER')
         env_token = os.environ.get('HOMESTAK_TOKEN')
         env_ref = os.environ.get('HOMESTAK_REF', '_working')
 
@@ -306,7 +306,7 @@ class BootstrapAction:
             # Pass env vars to bash (not curl) so install uses local (uncommitted) code
             # Use 'sudo env VAR=value bash' because 'VAR=value sudo bash' doesn't work -
             # sudo resets the environment by default for security
-            env_prefix = f'HOMESTAK_SOURCE={env_source}'
+            env_prefix = f'HOMESTAK_SERVER={env_source}'
             if env_token:
                 env_prefix += f' HOMESTAK_TOKEN={env_token}'
             env_prefix += f' HOMESTAK_REF={env_ref}'

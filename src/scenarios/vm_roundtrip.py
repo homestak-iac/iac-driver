@@ -32,34 +32,34 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class CheckSpecServerConfigAction:
-    """Verify spec_server is configured in site.yaml."""
+class CheckServerUrlConfigAction:
+    """Verify server_url is configured in site.yaml."""
     name: str
 
     def run(self, _config: HostConfig, _context: dict) -> ActionResult:
-        """Check that spec_server is configured."""
+        """Check that server_url is configured."""
         start = time.time()
 
         try:
             site_file = get_site_config_dir() / 'site.yaml'
             with open(site_file, encoding='utf-8') as f:
                 site_config = yaml.safe_load(f) or {}
-            spec_server = site_config.get('defaults', {}).get('spec_server', '')
+            server_url = site_config.get('defaults', {}).get('server_url', '')
 
-            if not spec_server:
+            if not server_url:
                 return ActionResult(
                     success=False,
-                    message="spec_server not configured in site.yaml. "
-                            "Set defaults.spec_server to enable Create → Specify flow.",
+                    message="server_url not configured in site.yaml. "
+                            "Set defaults.server_url to enable Create → Config flow.",
                     duration=time.time() - start
                 )
 
-            logger.info(f"[{self.name}] spec_server configured: {spec_server}")
+            logger.info(f"[{self.name}] server_url configured: {server_url}")
             return ActionResult(
                 success=True,
-                message=f"spec_server: {spec_server}",
+                message=f"server_url: {server_url}",
                 duration=time.time() - start,
-                context_updates={'spec_server_url': spec_server}
+                context_updates={'server_url': server_url}
             )
         except Exception as e:
             return ActionResult(
@@ -109,7 +109,7 @@ class StartServerAction:
                     success=True,
                     message=f"Server already running (PID {pid}, port {self.server_port})",
                     duration=time.time() - start,
-                    context_updates={'spec_server_pid': str(pid)}
+                    context_updates={'server_pid': str(pid)}
                 )
         except (ValueError, TypeError):
             pass  # Status check failed, proceed with start
@@ -145,7 +145,7 @@ class StartServerAction:
             success=True,
             message=f"Server started (PID {pid}, port {self.server_port})",
             duration=time.time() - start,
-            context_updates={'spec_server_pid': pid}
+            context_updates={'server_pid': pid}
         )
 
 
@@ -218,7 +218,7 @@ class VerifyServerReachableAction:
         start = time.time()
 
         host = context.get(self.host_key)
-        spec_server = context.get('spec_server_url')
+        server_url = context.get('server_url')
 
         if not host:
             return ActionResult(
@@ -227,16 +227,16 @@ class VerifyServerReachableAction:
                 duration=time.time() - start
             )
 
-        if not spec_server:
+        if not server_url:
             return ActionResult(
                 success=False,
-                message="No spec_server_url in context",
+                message="No server_url in context",
                 duration=time.time() - start
             )
 
         # Curl the health endpoint (allow self-signed cert)
-        cmd = f'curl -sk {spec_server}/health 2>&1 || echo "CURL_FAILED"'
-        logger.info(f"[{self.name}] Testing connectivity to {spec_server} from {host}...")
+        cmd = f'curl -sk {server_url}/health 2>&1 || echo "CURL_FAILED"'
+        logger.info(f"[{self.name}] Testing connectivity to {server_url} from {host}...")
         rc, out, _ = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
 
         if 'CURL_FAILED' in out or rc != 0:
@@ -380,9 +380,9 @@ class SpecVMPushRoundtrip:
         """Return phases for spec VM push roundtrip test."""
         return [
             # Prerequisites
-            ('check_config', CheckSpecServerConfigAction(
+            ('check_config', CheckServerUrlConfigAction(
                 name='check-spec-config',
-            ), 'Verify spec_server configured'),
+            ), 'Verify server_url configured'),
 
             ('start_server', StartServerAction(
                 name='start-spec-server',
@@ -455,9 +455,9 @@ class SpecVMPullRoundtrip:
         """Return phases for spec VM pull roundtrip test."""
         return [
             # Prerequisites
-            ('check_config', CheckSpecServerConfigAction(
+            ('check_config', CheckServerUrlConfigAction(
                 name='check-spec-config',
-            ), 'Verify spec_server configured'),
+            ), 'Verify server_url configured'),
 
             ('start_server', StartServerAction(
                 name='start-spec-server',

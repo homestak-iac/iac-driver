@@ -239,8 +239,8 @@ print('\\n'.join(parts))
         user = config.automation_user
         sudo = sudo_prefix(user)
 
-        repo = config.packer_release_repo
-        tag = config.packer_release
+        repo = config.image_release_repo
+        tag = config.image_release
 
         url = f'https://github.com/{repo}/releases/download/{tag}/{self.asset_name}'
         dest = f"{self.dest_dir}/{self.asset_name}"

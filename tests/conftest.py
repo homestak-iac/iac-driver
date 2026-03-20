@@ -97,7 +97,7 @@ def site_config_dir(tmp_path):
     for d in ['nodes', 'envs', 'vms', 'presets', 'postures', 'hosts']:
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
 
-    # Create site.yaml (v0.13: packages and pve settings, v0.45: spec_server)
+    # Create site.yaml (v0.13: packages and pve settings, v0.45: server_url)
     (tmp_path / 'site.yaml').write_text("""
 defaults:
   timezone: America/Denver
@@ -111,7 +111,7 @@ defaults:
     - curl
     - wget
   pve_remove_subscription_nag: true
-  spec_server: "https://controller:44443"
+  server_url: "https://controller:44443"
 """)
 
     # Create secrets.yaml (signing_key for provisioning tokens, #231)

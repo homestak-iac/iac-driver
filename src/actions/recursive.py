@@ -135,7 +135,7 @@ class RecursiveScenarioAction:
         All arguments are shell-quoted to handle JSON and other special characters
         that may be passed via scenario_args.
 
-        If serve-repos environment variables are set (HOMESTAK_SOURCE, HOMESTAK_TOKEN,
+        If serve-repos environment variables are set (HOMESTAK_SERVER, HOMESTAK_TOKEN,
         HOMESTAK_REF), they are propagated to the remote command so that child hosts
         can download from the same serve-repos server instead of GitHub.
         """
@@ -165,15 +165,15 @@ class RecursiveScenarioAction:
         """Build environment variable prefix for serve-repos propagation.
 
         When running with --serve-repos (or _working ref), the outer host has
-        HOMESTAK_SOURCE, HOMESTAK_TOKEN, and HOMESTAK_REF set. This method
+        HOMESTAK_SERVER, HOMESTAK_TOKEN, and HOMESTAK_REF set. This method
         builds a prefix to pass these to the remote command so that nested
         bootstrap operations use serve-repos instead of GitHub.
 
         Returns:
-            Shell-safe env var assignments (e.g., 'HOMESTAK_SOURCE="http://..." ...')
+            Shell-safe env var assignments (e.g., 'HOMESTAK_SERVER="https://..." ...')
             or empty string if serve-repos is not active.
         """
-        serve_repos_vars = ['HOMESTAK_SOURCE', 'HOMESTAK_TOKEN', 'HOMESTAK_REF']
+        serve_repos_vars = ['HOMESTAK_SERVER', 'HOMESTAK_TOKEN', 'HOMESTAK_REF']
         env_parts = []
 
         for var in serve_repos_vars:

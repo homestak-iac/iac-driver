@@ -91,7 +91,7 @@ class TestBootstrapAction:
         assert result.success is True
 
     @patch('actions.pve_lifecycle.run_ssh')
-    @patch.dict('os.environ', {'HOMESTAK_SOURCE': 'https://198.51.100.61:44443', 'HOMESTAK_REF': '_working'}, clear=False)
+    @patch.dict('os.environ', {'HOMESTAK_SERVER': 'https://198.51.100.61:44443', 'HOMESTAK_REF': '_working'}, clear=False)
     def test_serve_repos_uses_insecure_tls(self, mock_ssh):
         """Serve-repos path must pass -k to curl and HOMESTAK_INSECURE=1."""
         from actions.pve_lifecycle import BootstrapAction
