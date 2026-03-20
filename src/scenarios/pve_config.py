@@ -103,7 +103,7 @@ class _ConfigureBridgePhase:
                     site = yaml.safe_load(f) or {}
                 dns_servers = site.get('defaults', {}).get('dns_servers', [])
                 if dns_servers:
-                    extra_vars['pve_dns_servers'] = json.dumps(dns_servers)
+                    extra_vars['pve_dns_servers'] = dns_servers
         except Exception:  # pylint: disable=broad-except
             pass  # Best effort — bridge still works without DNS
 

@@ -1,5 +1,6 @@
 """Ansible playbook actions."""
 
+import json
 import logging
 import time
 from dataclasses import dataclass, field
@@ -10,6 +11,22 @@ from config import HostConfig, get_sibling_dir
 from config_resolver import ConfigResolver
 
 logger = logging.getLogger(__name__)
+
+
+def _append_ansible_vars(cmd: list, vars_dict: dict) -> None:
+    """Append variables to ansible-playbook command.
+
+    Uses JSON body format (-e '{"key": [...]}') for list/dict types
+    so ansible parses them correctly. The key=value format always
+    treats values as strings, which breaks Jinja2 filters like join().
+    """
+    for key, value in vars_dict.items():
+        if isinstance(value, (list, dict)):
+            cmd.extend(['-e', json.dumps({key: value})])
+        elif isinstance(value, bool):
+            cmd.extend(['-e', f'{key}={str(value).lower()}'])
+        else:
+            cmd.extend(['-e', f'{key}={value}'])
 
 
 @dataclass
@@ -78,18 +95,10 @@ class AnsiblePlaybookAction:
         ]
 
         # Add resolved config vars first (extra_vars can override)
-        for key, value in resolved_vars.items():
-            if isinstance(value, (list, dict)):
-                import json
-                cmd.extend(['-e', f'{key}={json.dumps(value)}'])
-            elif isinstance(value, bool):
-                cmd.extend(['-e', f'{key}={str(value).lower()}'])
-            else:
-                cmd.extend(['-e', f'{key}={value}'])
+        _append_ansible_vars(cmd, resolved_vars)
 
         # Add extra vars (these override config)
-        for key, value in self.extra_vars.items():
-            cmd.extend(['-e', f'{key}={value}'])
+        _append_ansible_vars(cmd, self.extra_vars)
 
         rc, out, err = run_command(cmd, cwd=ansible_dir, timeout=self.timeout)
         if rc != 0:
@@ -161,18 +170,10 @@ class AnsibleLocalPlaybookAction:
         ]
 
         # Add resolved config vars first (extra_vars can override)
-        for key, value in resolved_vars.items():
-            if isinstance(value, (list, dict)):
-                import json
-                cmd.extend(['-e', f'{key}={json.dumps(value)}'])
-            elif isinstance(value, bool):
-                cmd.extend(['-e', f'{key}={str(value).lower()}'])
-            else:
-                cmd.extend(['-e', f'{key}={value}'])
+        _append_ansible_vars(cmd, resolved_vars)
 
         # Add extra vars (these override config)
-        for key, value in self.extra_vars.items():
-            cmd.extend(['-e', f'{key}={value}'])
+        _append_ansible_vars(cmd, self.extra_vars)
 
         rc, out, err = run_command(cmd, cwd=ansible_dir, timeout=self.timeout)
         if rc != 0:
