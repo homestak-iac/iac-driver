@@ -18,6 +18,9 @@ secrets/*.json
 !secrets/.sops.yaml
 !secrets/*.enc
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # Editor/OS
 *.swp
 *.swo
