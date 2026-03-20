@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Features
+- Add `/config/{identity}` endpoint for pull-mode config distribution (#248)
+
 ## v0.56 - 2026-03-09
 
 ### Fixed
