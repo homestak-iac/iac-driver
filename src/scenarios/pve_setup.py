@@ -279,14 +279,11 @@ class _CreateApiTokenPhase:
             )
 
         # Regenerate SSL certs and restart pveproxy before token creation
-        # Fixes IPv6-related SSL issues on fresh PVE installs
+        # IPv6 disable/enable toggle removed — pvecm updatecerts works without
+        # it on Debian 13 + PVE 9.1 (tested 2026-03-20, see #228)
         logger.debug("Regenerating PVE SSL certificates...")
         subprocess.run(
-            'sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 && '
-            'sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1 && '
             'sudo pvecm updatecerts --force 2>/dev/null; '
-            'sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 && '
-            'sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0 && '
             'sudo systemctl restart pveproxy && sleep 2',
             shell=True, capture_output=True, timeout=60, check=False
         )
