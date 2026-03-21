@@ -158,10 +158,15 @@ class CreateApiTokenAction:
             )
 
         # Step 1: Regenerate PVE SSL certificates and restart pveproxy
-        # IPv6 disable/enable toggle removed — pvecm updatecerts works without
-        # it on Debian 13 + PVE 9.1 (tested 2026-03-20, see #228)
+        # IPv6 must be temporarily disabled — pvecm updatecerts generates
+        # certificates with IPv6 bindings that break API verification on
+        # PVE VMs. Bare-metal hosts work without this, but VMs need it (#228).
         ssl_cmd = '''
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 sudo pvecm updatecerts --force 2>/dev/null || true
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0
 sudo systemctl restart pveproxy
 sleep 2
 '''
