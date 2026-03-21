@@ -59,7 +59,7 @@ class NodeExecutor:
         server_url = getattr(self.config, 'server_url', '') or ''
         self._server = ServerManager(
             ssh_host=self.config.ssh_host,
-            ssh_user=self.config.host_user,
+            ssh_user=self.config.vm_user,
             self_addr=self.self_addr,
             port=ServerManager.resolve_port(server_url),
         )
