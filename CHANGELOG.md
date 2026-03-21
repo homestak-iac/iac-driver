@@ -17,9 +17,12 @@
 - Change `automation_user` to `vm_user` in config (#342)
 - Change `HOMESTAK_SOURCE` to `HOMESTAK_SERVER` in server management (#314)
 - Change `--packer-release` CLI flag to `--image-release` (#318)
+- Change `n2-tiered` references to `n2-push`, `n2-mixed` to `n2-pull` (meta#352)
 
 ### Added
 - Add `host_user` to ConfigResolver tfvars output (#342)
+- Add scenario-aware preflight validation — respects `requires_host_config` to skip site config checks (#315)
+- Add bare repo refresh on server reuse — sends SIGHUP to re-prepare when reusing running server (#316)
 
 ### Fixed
 - Use correct ansible inventory for local bridge playbook in pve-config scenario
@@ -28,6 +31,8 @@
 
 ### Removed
 - Remove `HOMESTAK_SPEC_SERVER` legacy fallback from spec_client (#314)
+- Remove IPv6 disable/enable toggle around `pvecm updatecerts` — no longer needed on Debian 13 + PVE 9.1 (#228)
+- Remove `--skip-preflight` from delegated manifest calls in executor (#315)
 
 ## v0.56 - 2026-03-09
 
