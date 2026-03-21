@@ -291,7 +291,7 @@ The operator engine (`manifest_opr/`) walks a v2 manifest graph to execute creat
 
 ```yaml
 schema_version: 2
-name: n2-tiered
+name: n2-push
 pattern: tiered
 nodes:
   - name: root-pve
@@ -313,10 +313,10 @@ nodes:
 ### Noun-Action Commands
 
 ```bash
-./run.sh manifest apply -M n2-tiered -H srv1 [--dry-run] [--json-output] [--verbose]
-./run.sh manifest destroy -M n2-tiered -H srv1 [--dry-run] [--yes]
-./run.sh manifest test -M n2-tiered -H srv1 [--dry-run] [--json-output]
-./run.sh manifest validate -M n2-tiered -H srv1 [--json-output]
+./run.sh manifest apply -M n2-push -H srv1 [--dry-run] [--json-output] [--verbose]
+./run.sh manifest destroy -M n2-push -H srv1 [--dry-run] [--yes]
+./run.sh manifest test -M n2-push -H srv1 [--dry-run] [--json-output]
+./run.sh manifest validate -M n2-push -H srv1 [--json-output]
 ./run.sh config fetch [--insecure]
 ./run.sh config apply [--spec /path.yaml] [--dry-run]
 ```
@@ -357,10 +357,10 @@ PVE nodes default to **2-phase self-configure**: cloud-init bootstraps and start
 Manifests define N-level tiered PVE deployments using graph-based schema v2. Manifests are YAML files in `config/manifests/`.
 
 ```bash
-./run.sh manifest apply -M n2-tiered -H srv1
-./run.sh manifest destroy -M n2-tiered -H srv1 --yes
-./run.sh manifest test -M n2-tiered -H srv1
-./run.sh manifest apply -M n2-tiered -H srv1 --dry-run
+./run.sh manifest apply -M n2-push -H srv1
+./run.sh manifest destroy -M n2-push -H srv1 --yes
+./run.sh manifest test -M n2-push -H srv1
+./run.sh manifest apply -M n2-push -H srv1 --dry-run
 ./run.sh manifest test -M n1-push -H srv1 --json-output
 ```
 
@@ -451,10 +451,10 @@ Run `./run.sh` with no arguments for top-level usage, or `./run.sh scenario --he
 
 ```bash
 # Manifest commands (infrastructure lifecycle)
-./run.sh manifest apply -M n2-tiered -H srv1
-./run.sh manifest destroy -M n2-tiered -H srv1 --yes
-./run.sh manifest test -M n2-tiered -H srv1
-./run.sh manifest validate -M n2-tiered -H srv1
+./run.sh manifest apply -M n2-push -H srv1
+./run.sh manifest destroy -M n2-push -H srv1 --yes
+./run.sh manifest test -M n2-push -H srv1
+./run.sh manifest validate -M n2-push -H srv1
 
 # Config commands (spec fetch and apply)
 ./run.sh config fetch --insecure

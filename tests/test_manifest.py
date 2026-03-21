@@ -244,7 +244,7 @@ class TestManifestV2:
 
         data = {
             'schema_version': 2,
-            'name': 'n2-tiered',
+            'name': 'n2-push',
             'pattern': 'tiered',
             'nodes': [
                 {'name': 'root-pve', 'type': 'pve', 'preset': 'vm-large', 'image': 'pve-9', 'vmid': 99011},
@@ -479,7 +479,7 @@ class TestManifestV2Serialization:
 
         data = {
             'schema_version': 2,
-            'name': 'n2-tiered',
+            'name': 'n2-push',
             'description': 'Test',
             'pattern': 'tiered',
             'nodes': [
@@ -511,15 +511,15 @@ class TestManifestLoader:
             manifests_dir = Path(tmpdir) / 'manifests'
             manifests_dir.mkdir()
 
-            (manifests_dir / 'n2-tiered.yaml').write_text(
-                'schema_version: 2\nname: n2-tiered\nnodes:\n  - name: test\n    type: vm\n')
+            (manifests_dir / 'n2-push.yaml').write_text(
+                'schema_version: 2\nname: n2-push\nnodes:\n  - name: test\n    type: vm\n')
             (manifests_dir / 'n3-deep.yaml').write_text(
                 'schema_version: 2\nname: n3-deep\nnodes:\n  - name: test\n    type: vm\n')
 
             loader = ManifestLoader(site_config_path=tmpdir)
             manifests = loader.list_manifests()
 
-            assert 'n2-tiered' in manifests
+            assert 'n2-push' in manifests
             assert 'n3-deep' in manifests
 
     def test_load_manifest(self):
