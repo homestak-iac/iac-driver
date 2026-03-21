@@ -53,7 +53,7 @@ class EnsureImageAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        ssh_user = config.automation_user
+        ssh_user = config.host_user
         image_name = config.packer_image.replace('.qcow2', '.img')
         image_path = f'/var/lib/vz/template/iso/{image_name}'
 
@@ -73,8 +73,8 @@ class EnsureImageAction:
             )
 
         # Download from release
-        repo = config.packer_release_repo
-        tag = config.packer_release
+        repo = config.image_release_repo
+        tag = config.image_release
         url = f'https://github.com/{repo}/releases/download/{tag}/{config.packer_image}'
 
         logger.info(f"[{self.name}] Downloading {config.packer_image} from {repo} {tag}...")
@@ -136,7 +136,7 @@ class CreateApiTokenAction:
 
         # Step 0: Get the hostname - this becomes the token key in secrets.yaml
         # The node config uses hostname as api_token key, so we must match it
-        rc, hostname_out, err = run_ssh(host, 'hostname', user=config.automation_user, timeout=10)
+        rc, hostname_out, err = run_ssh(host, 'hostname', user=config.vm_user, timeout=10)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -168,7 +168,7 @@ sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0
 sudo systemctl restart pveproxy
 sleep 2
 '''
-        rc, out, err = run_ssh(host, ssl_cmd, user=config.automation_user, timeout=60)
+        rc, out, err = run_ssh(host, ssl_cmd, user=config.vm_user, timeout=60)
         if rc != 0:
             logger.warning(f"[{self.name}] SSL cert regen warning: {err or out}")
             # Continue anyway - this might fail on some systems
@@ -178,7 +178,7 @@ sleep 2
 sudo pveum user token remove root@pam tofu 2>/dev/null || true
 sudo pveum user token add root@pam tofu --privsep 0 --output-format json
 '''
-        rc, out, err = run_ssh(host, token_cmd, user=config.automation_user, timeout=30)
+        rc, out, err = run_ssh(host, token_cmd, user=config.vm_user, timeout=30)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -211,7 +211,7 @@ else
     sed -i '/^api_tokens:/a\\  {token_name}: {full_token}' {secrets_file}
 fi
 '''
-        rc, out, err = run_ssh(host, inject_cmd, user=config.automation_user, timeout=30)
+        rc, out, err = run_ssh(host, inject_cmd, user=config.vm_user, timeout=30)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -260,7 +260,7 @@ except Exception:
     sys.exit(1)
 "
 '''
-        rc, out, _ = run_ssh(host, check_cmd, user=config.automation_user, timeout=15)
+        rc, out, _ = run_ssh(host, check_cmd, user=config.vm_user, timeout=15)
         return rc == 0 and 'valid' in out
 
 
@@ -269,10 +269,10 @@ class BootstrapAction:
     """Bootstrap homestak on a remote host.
 
     Runs the bootstrap curl|bash installer on a target host. Integrates with
-    serve-repos infrastructure when HOMESTAK_SOURCE env var is set.
+    serve-repos infrastructure when HOMESTAK_SERVER env var is set.
 
     Environment variables (from --serve-repos):
-    - HOMESTAK_SOURCE: HTTP server URL for local repo access
+    - HOMESTAK_SERVER: Server URL for local repo access
     - HOMESTAK_TOKEN: Bearer token for authentication
     - HOMESTAK_REF: Git ref to use (default: _working)
     """
@@ -295,7 +295,7 @@ class BootstrapAction:
             )
 
         # Check for serve-repos env vars (dev workflow)
-        env_source = os.environ.get('HOMESTAK_SOURCE')
+        env_source = os.environ.get('HOMESTAK_SERVER')
         env_token = os.environ.get('HOMESTAK_TOKEN')
         env_ref = os.environ.get('HOMESTAK_REF', '_working')
 
@@ -306,7 +306,7 @@ class BootstrapAction:
             # Pass env vars to bash (not curl) so install uses local (uncommitted) code
             # Use 'sudo env VAR=value bash' because 'VAR=value sudo bash' doesn't work -
             # sudo resets the environment by default for security
-            env_prefix = f'HOMESTAK_SOURCE={env_source}'
+            env_prefix = f'HOMESTAK_SERVER={env_source}'
             if env_token:
                 env_prefix += f' HOMESTAK_TOKEN={env_token}'
             env_prefix += f' HOMESTAK_REF={env_ref}'
@@ -332,7 +332,7 @@ class BootstrapAction:
         rc, out, err = run_ssh(
             host,
             bootstrap_cmd,
-            user=config.automation_user,
+            user=config.vm_user,
             timeout=self.timeout
         )
 
@@ -403,7 +403,7 @@ class CopySecretsAction:
             yaml.dump(secrets, f, default_flow_style=False)
 
         # scp directly to ~/config/ (user-owned, no temp file dance needed)
-        user = config.automation_user
+        user = config.vm_user
         cmd = [
             'scp',
             '-o', 'StrictHostKeyChecking=no',
@@ -431,7 +431,7 @@ class CopySecretsAction:
             # Restrict permissions (secrets contain API tokens, SSH keys, signing key)
             rc, out, err = run_ssh(
                 host, 'chmod 600 ~/config/secrets.yaml',
-                user=config.automation_user, timeout=30
+                user=config.vm_user, timeout=30
             )
             if rc != 0:
                 return ActionResult(
@@ -493,7 +493,7 @@ class CopySiteConfigAction:
         logger.info(f"[{self.name}] Copying site config to {host}...")
 
         # scp directly to ~/config/ (user-owned, no temp file dance needed)
-        user = config.automation_user
+        user = config.vm_user
         cmd = [
             'scp',
             '-o', 'StrictHostKeyChecking=no',
@@ -576,7 +576,7 @@ class InjectSSHKeyAction:
         # Inject key into secrets.yaml using sed
         # First check if key already exists
         check_cmd = f"grep -q '^\\s*{self.key_name}:' ~/config/secrets.yaml"
-        rc, _, _ = run_ssh(host, check_cmd, user=config.automation_user, timeout=30)
+        rc, _, _ = run_ssh(host, check_cmd, user=config.vm_user, timeout=30)
 
         if rc == 0:
             # Key exists, update it
@@ -585,7 +585,7 @@ class InjectSSHKeyAction:
             # Key doesn't exist, add it after ssh_keys:
             inject_cmd = f"sed -i '/^ssh_keys:/a\\  {self.key_name}: {escaped_key}' ~/config/secrets.yaml"
 
-        rc, out, err = run_ssh(host, inject_cmd, user=config.automation_user, timeout=self.timeout)
+        rc, out, err = run_ssh(host, inject_cmd, user=config.vm_user, timeout=self.timeout)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -595,7 +595,7 @@ class InjectSSHKeyAction:
 
         # Verify the key was injected
         verify_cmd = f"grep -q '{self.key_name}:' ~/config/secrets.yaml"
-        rc, _, _ = run_ssh(host, verify_cmd, user=config.automation_user, timeout=30)
+        rc, _, _ = run_ssh(host, verify_cmd, user=config.vm_user, timeout=30)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -682,7 +682,7 @@ fi
 echo "SSH key copied to ~/.ssh/"
 '''
 
-        rc, out, err = run_ssh(host, copy_script, user=config.automation_user, timeout=self.timeout)
+        rc, out, err = run_ssh(host, copy_script, user=config.vm_user, timeout=self.timeout)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -771,7 +771,7 @@ print(f"Injected {key_name}")
         encoded = base64.b64encode(python_script.encode()).decode()
         inject_script = f"echo '{encoded}' | base64 -d | python3 - {self.key_name}"
 
-        rc, out, err = run_ssh(host, inject_script, user=config.automation_user, timeout=self.timeout)
+        rc, out, err = run_ssh(host, inject_script, user=config.vm_user, timeout=self.timeout)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -814,13 +814,13 @@ class ConfigureNetworkBridgeAction:
 
         # Check if vmbr0 already exists
         check_cmd = "ip link show vmbr0 2>/dev/null && ip addr show vmbr0 | grep -q 'inet '"
-        rc, out, err = run_ssh(host, check_cmd, user=config.automation_user, timeout=30)
+        rc, out, err = run_ssh(host, check_cmd, user=config.vm_user, timeout=30)
         if rc == 0:
             logger.info(f"[{self.name}] vmbr0 already exists on {host}")
             # Ensure DNS is configured on vmbr0 even if bridge already exists (#229)
             if config.dns_servers:
                 dns_cmd = f'sudo resolvectl dns vmbr0 {" ".join(config.dns_servers)} 2>/dev/null || true'
-                run_ssh(host, dns_cmd, user=config.automation_user, timeout=30)
+                run_ssh(host, dns_cmd, user=config.vm_user, timeout=30)
                 logger.info(f"[{self.name}] DNS configured on vmbr0: {config.dns_servers}")
             return ActionResult(
                 success=True,
@@ -883,7 +883,7 @@ echo "Warning: vmbr0 did not get IP within 30s"
 exit 0
 '''
 
-        rc, out, err = run_ssh(host, bridge_script, user=config.automation_user, timeout=self.timeout)
+        rc, out, err = run_ssh(host, bridge_script, user=config.vm_user, timeout=self.timeout)
         if rc != 0:
             return ActionResult(
                 success=False,
@@ -927,7 +927,7 @@ class GenerateNodeConfigAction:
 
         # Use FORCE=1 in case node config was copied from outer host
         cmd = 'cd ~/config && make node-config FORCE=1'
-        rc, out, err = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
+        rc, out, err = run_ssh(host, cmd, user=config.vm_user, timeout=self.timeout)
 
         if rc != 0:
             return ActionResult(

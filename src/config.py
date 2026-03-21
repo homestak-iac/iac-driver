@@ -45,20 +45,20 @@ class HostConfig:
     config_file: Path
     api_endpoint: str = ''
     ssh_host: str = ''
-    ssh_user: str = field(default_factory=lambda: os.getenv('USER', ''))
-    automation_user: str = 'homestak'  # For SSH to VMs (created via cloud-init)
+    host_user: str = field(default_factory=lambda: os.getenv('USER', ''))  # SSH user for PVE hosts
+    vm_user: str = 'homestak'  # SSH user for VMs (created via cloud-init)
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')
 
-    # Packer release settings
-    packer_release_repo: str = 'homestak-iac/packer'
-    packer_release: str = 'latest'
+    # Image release settings
+    image_release_repo: str = 'homestak-iac/packer'
+    image_release: str = 'latest'
     packer_image: str = 'debian-12.qcow2'
 
     # DNS servers from site.yaml (for bridge config, #229)
     dns_servers: list = field(default_factory=list)
 
-    # Spec server URL from site.yaml defaults (e.g., "https://controller:44443")
-    spec_server: str = ''
+    # Server URL from site.yaml defaults (e.g., "https://controller:44443")
+    server_url: str = ''
 
     # Track config source type
     is_host_only: bool = False  # True when loaded from hosts/*.yaml (no PVE)
@@ -112,25 +112,25 @@ class HostConfig:
             # Store resolved token for use by scenarios
             self._api_token = secrets['api_tokens'].get(api_token_key, '')
 
-        # SSH user: node > site > default (for PVE host connections)
-        if ssh_user := node_config.get('ssh_user', site_defaults.get('ssh_user')):
-            self.ssh_user = ssh_user
+        # Host user: node > site > default (for PVE host connections)
+        if host_user := node_config.get('host_user', site_defaults.get('host_user')):
+            self.host_user = host_user
 
-        # Automation user: for SSH to VMs created via cloud-init
-        if automation_user := site_defaults.get('automation_user'):
-            self.automation_user = automation_user
+        # VM user: for SSH to VMs created via cloud-init
+        if vm_user := site_defaults.get('vm_user'):
+            self.vm_user = vm_user
 
-        # Packer release: site.yaml > default
-        if packer_release := site_defaults.get('packer_release'):
-            self.packer_release = packer_release
+        # Image release: site.yaml > default
+        if image_release := site_defaults.get('image_release'):
+            self.image_release = image_release
 
         # DNS servers: site.yaml (for bridge config, #229)
         if dns_servers := site_defaults.get('dns_servers'):
             self.dns_servers = dns_servers
 
-        # Spec server URL: site.yaml (for server daemon management, #203)
-        if spec_server := site_defaults.get('spec_server'):
-            self.spec_server = spec_server
+        # Server URL: site.yaml (for server daemon management, #203)
+        if server_url := site_defaults.get('server_url'):
+            self.server_url = server_url
 
     def _load_from_host_yaml(self):
         """Load configuration from hosts/*.yaml (SSH-only, pre-PVE).
@@ -164,28 +164,28 @@ class HostConfig:
                     # Strip CIDR suffix (e.g., "198.51.100.61/24" -> "198.51.100.61")
                     self.ssh_host = address.split('/')[0]
 
-        # SSH user from access section or site defaults
+        # Host user from access section or site defaults
         if access := host_config.get('access', {}):
-            if ssh_user := access.get('ssh_user'):
-                self.ssh_user = ssh_user
-        elif ssh_user := site_defaults.get('ssh_user'):
-            self.ssh_user = ssh_user
+            if host_user := access.get('host_user'):
+                self.host_user = host_user
+        elif host_user := site_defaults.get('host_user'):
+            self.host_user = host_user
 
-        # Automation user: for SSH to VMs created via cloud-init
-        if automation_user := site_defaults.get('automation_user'):
-            self.automation_user = automation_user
+        # VM user: for SSH to VMs created via cloud-init
+        if vm_user := site_defaults.get('vm_user'):
+            self.vm_user = vm_user
 
-        # Packer release: site.yaml > default
-        if packer_release := site_defaults.get('packer_release'):
-            self.packer_release = packer_release
+        # Image release: site.yaml > default
+        if image_release := site_defaults.get('image_release'):
+            self.image_release = image_release
 
         # DNS servers: site.yaml (for bridge config, #229)
         if dns_servers := site_defaults.get('dns_servers'):
             self.dns_servers = dns_servers
 
-        # Spec server URL: site.yaml (for server daemon management, #203)
-        if spec_server := site_defaults.get('spec_server'):
-            self.spec_server = spec_server
+        # Server URL: site.yaml (for server daemon management, #203)
+        if server_url := site_defaults.get('server_url'):
+            self.server_url = server_url
 
         # No api_endpoint or api_token for host-only configs
         # These remain empty strings (defaults)

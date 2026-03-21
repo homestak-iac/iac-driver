@@ -27,8 +27,8 @@ class MockHostConfig:
     """
     name: str = 'test-host'
     ssh_host: str = '192.0.2.1'
-    ssh_user: str = 'root'
-    automation_user: str = 'homestak'
+    host_user: str = 'root'
+    vm_user: str = 'homestak'
     vm_id: int = 99913
     config_file: Path = Path('/tmp/test.yaml')
 
@@ -97,12 +97,12 @@ def site_config_dir(tmp_path):
     for d in ['nodes', 'envs', 'vms', 'presets', 'postures', 'hosts']:
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
 
-    # Create site.yaml (v0.13: packages and pve settings, v0.45: spec_server)
+    # Create site.yaml (v0.13: packages and pve settings, v0.45: server_url)
     (tmp_path / 'site.yaml').write_text("""
 defaults:
   timezone: America/Denver
   bridge: vmbr0
-  ssh_user: root
+  host_user: root
   gateway: 198.51.100.1
   dns_servers:
     - 198.51.100.1
@@ -111,7 +111,7 @@ defaults:
     - curl
     - wget
   pve_remove_subscription_nag: true
-  spec_server: "https://controller:44443"
+  server_url: "https://controller:44443"
 """)
 
     # Create secrets.yaml (signing_key for provisioning tokens, #231)

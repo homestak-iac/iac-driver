@@ -124,7 +124,7 @@ api_endpoint: https://198.51.100.10:8006
         (hosts_dir / 'testhost.yaml').write_text("""
 ip: 192.0.2.1
 access:
-  ssh_user: root
+  host_user: root
 """)
 
         with patch('config.get_site_config_dir', return_value=tmp_path):
@@ -162,9 +162,9 @@ class TestHostConfig:
         config_file.write_text('')
 
         config = HostConfig(name='test', config_file=config_file)
-        assert config.ssh_user == os.getenv('USER', '')  # Defaults to current user
-        assert config.automation_user == 'homestak'  # For VMs via cloud-init
-        assert config.packer_release == 'latest'
+        assert config.host_user == os.getenv('USER', '')  # Defaults to current user
+        assert config.vm_user == 'homestak'  # For VMs via cloud-init
+        assert config.image_release == 'latest'
 
 
 class TestParseYaml:

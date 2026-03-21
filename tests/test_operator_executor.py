@@ -37,8 +37,8 @@ def _make_config():
     config = MagicMock()
     config.name = 'test-host'
     config.ssh_host = '198.51.100.61'
-    config.ssh_user = 'root'
-    config.automation_user = 'homestak'
+    config.host_user = 'root'
+    config.vm_user = 'homestak'
     return config
 
 
@@ -465,40 +465,40 @@ class TestNodeExecutorTest:
 
 
 class TestServerPortResolution:
-    """Tests for server port resolution from config.spec_server URL."""
+    """Tests for server port resolution from config.server_url URL."""
 
-    def test_port_from_spec_server_url(self):
-        """Port extracted from spec_server URL."""
+    def test_port_from_server_url_url(self):
+        """Port extracted from server_url URL."""
         manifest = _make_manifest([
             {'name': 'test', 'type': 'vm', 'vmid': 99001, 'image': 'debian-12', 'preset': 'vm-small'},
         ])
         graph = ManifestGraph(manifest)
         config = _make_config()
-        config.spec_server = 'https://controller:55555'
+        config.server_url = 'https://controller:55555'
 
         executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
         assert executor._server.port == 55555
 
-    def test_default_port_when_no_spec_server(self):
-        """Default port used when spec_server is empty."""
+    def test_default_port_when_no_server_url(self):
+        """Default port used when server_url is empty."""
         manifest = _make_manifest([
             {'name': 'test', 'type': 'vm', 'vmid': 99001, 'image': 'debian-12', 'preset': 'vm-small'},
         ])
         graph = ManifestGraph(manifest)
         config = _make_config()
-        config.spec_server = ''
+        config.server_url = ''
 
         executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
         assert executor._server.port == 44443
 
     def test_default_port_when_url_has_no_port(self):
-        """Default port used when spec_server URL omits port."""
+        """Default port used when server_url URL omits port."""
         manifest = _make_manifest([
             {'name': 'test', 'type': 'vm', 'vmid': 99001, 'image': 'debian-12', 'preset': 'vm-small'},
         ])
         graph = ManifestGraph(manifest)
         config = _make_config()
-        config.spec_server = 'https://controller'
+        config.server_url = 'https://controller'
 
         executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
         assert executor._server.port == 44443
@@ -506,7 +506,7 @@ class TestServerPortResolution:
 
 
 class TestServerSourceEnv:
-    """Tests for HOMESTAK_SOURCE env var lifecycle in _ensure_server/_stop_server.
+    """Tests for HOMESTAK_SERVER env var lifecycle in _ensure_server/_stop_server.
 
     These tests do NOT use the autouse _skip_server fixture — they need
     the real _ensure_server/_stop_server methods with SSH calls mocked.
@@ -515,10 +515,10 @@ class TestServerSourceEnv:
     @pytest.fixture(autouse=True)
     def _clean_env(self):
         """Ensure env vars are clean before and after each test."""
-        for var in ('HOMESTAK_SOURCE', 'HOMESTAK_REF', 'HOMESTAK_SELF_ADDR'):
+        for var in ('HOMESTAK_SERVER', 'HOMESTAK_REF', 'HOMESTAK_SELF_ADDR'):
             os.environ.pop(var, None)
         yield
-        for var in ('HOMESTAK_SOURCE', 'HOMESTAK_REF', 'HOMESTAK_SELF_ADDR'):
+        for var in ('HOMESTAK_SERVER', 'HOMESTAK_REF', 'HOMESTAK_SELF_ADDR'):
             os.environ.pop(var, None)
 
     @pytest.fixture(autouse=True)
@@ -547,7 +547,7 @@ class TestServerSourceEnv:
 
     @patch('manifest_opr.server_mgmt.run_ssh')
     def test_ensure_server_sets_env_on_fresh_start(self, mock_ssh):
-        """When server is not running, start it and set HOMESTAK_SOURCE."""
+        """When server is not running, start it and set HOMESTAK_SERVER."""
         # First call: status check → not running
         # Second call: server start → success
         mock_ssh.side_effect = [
@@ -558,23 +558,23 @@ class TestServerSourceEnv:
         executor = self._make_executor()
         executor._server.ensure()
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.61:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.61:44443'
         assert os.environ.get('HOMESTAK_REF') == '_working'
 
     @patch('manifest_opr.server_mgmt.run_ssh')
     def test_ensure_server_sets_env_on_reuse(self, mock_ssh):
-        """When server is already running, reuse it and still set HOMESTAK_SOURCE."""
+        """When server is already running, reuse it and still set HOMESTAK_SERVER."""
         mock_ssh.return_value = (0, '{"running": true, "healthy": true}', '')
 
         executor = self._make_executor()
         executor._server.ensure()
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.61:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.61:44443'
         assert executor._server._started is False  # Didn't start it ourselves
 
     @patch('manifest_opr.server_mgmt.run_ssh')
     def test_stop_server_clears_env(self, mock_ssh):
-        """_stop_server clears HOMESTAK_SOURCE when ref count drops to zero."""
+        """_stop_server clears HOMESTAK_SERVER when ref count drops to zero."""
         # Start: not running → start
         mock_ssh.side_effect = [
             (1, '', 'not running'),  # status check
@@ -584,10 +584,10 @@ class TestServerSourceEnv:
 
         executor = self._make_executor()
         executor._server.ensure()
-        assert 'HOMESTAK_SOURCE' in os.environ
+        assert 'HOMESTAK_SERVER' in os.environ
 
         executor._server.stop()
-        assert 'HOMESTAK_SOURCE' not in os.environ
+        assert 'HOMESTAK_SERVER' not in os.environ
         assert 'HOMESTAK_REF' not in os.environ
 
     @patch('manifest_opr.server_mgmt.run_ssh')
@@ -602,16 +602,16 @@ class TestServerSourceEnv:
         executor._server.ensure()  # refs=1, starts server
         executor._server.ensure()  # refs=2, no-op
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.61:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.61:44443'
 
         # Inner stop: decrements but doesn't clear
         executor._server.stop()  # refs=1
-        assert 'HOMESTAK_SOURCE' in os.environ
+        assert 'HOMESTAK_SERVER' in os.environ
 
         # Outer stop: clears env and stops server
         mock_ssh.side_effect = [(0, '', '')]  # stop call
         executor._server.stop()  # refs=0
-        assert 'HOMESTAK_SOURCE' not in os.environ
+        assert 'HOMESTAK_SERVER' not in os.environ
 
     @patch('manifest_opr.server_mgmt.run_ssh')
     def test_stop_clears_env_even_for_reused_server(self, mock_ssh):
@@ -623,7 +623,7 @@ class TestServerSourceEnv:
         assert executor._server._started is False  # Reused
 
         executor._server.stop()
-        assert 'HOMESTAK_SOURCE' not in os.environ
+        assert 'HOMESTAK_SERVER' not in os.environ
 
     @patch('manifest_opr.server_mgmt.run_ssh')
     def test_existing_homestak_ref_preserved(self, mock_ssh):
@@ -639,7 +639,7 @@ class TestServerSourceEnv:
         executor._server.ensure()
 
         assert os.environ.get('HOMESTAK_REF') == 'custom-branch'  # Preserved
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.61:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.61:44443'
 
     def test_set_source_env_uses_self_addr_for_localhost(self):
         """When host is localhost and self_addr is set, use self_addr (#200)."""
@@ -656,7 +656,7 @@ class TestServerSourceEnv:
         )
         executor._server._set_source_env('localhost')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.153:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.153:44443'
 
     def test_set_source_env_uses_self_addr_for_127(self):
         """When host is 127.0.0.1 and self_addr is set, use self_addr (#200)."""
@@ -672,7 +672,7 @@ class TestServerSourceEnv:
         )
         executor._server._set_source_env('127.0.0.1')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.153:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.153:44443'
 
     def test_set_source_env_ignores_self_addr_for_routable_host(self):
         """When host is already routable, self_addr is not used."""
@@ -688,7 +688,7 @@ class TestServerSourceEnv:
         )
         executor._server._set_source_env('198.51.100.61')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.61:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.61:44443'
 
     def test_set_source_env_localhost_falls_back_to_detect(self):
         """When host is localhost and no self_addr, detect external IP (#200)."""
@@ -702,7 +702,7 @@ class TestServerSourceEnv:
         with patch.object(ServerManager, 'detect_external_ip', return_value='198.51.100.61'):
             executor._server._set_source_env('localhost')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.61:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.61:44443'
 
     def test_set_source_env_localhost_detect_fails_uses_localhost(self):
         """When detection fails and no self_addr, fall back to localhost."""
@@ -716,7 +716,7 @@ class TestServerSourceEnv:
         with patch.object(ServerManager, 'detect_external_ip', return_value=None):
             executor._server._set_source_env('localhost')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://localhost:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://localhost:44443'
 
     def test_detect_external_ip_returns_address(self):
         """_detect_external_ip returns a non-loopback address."""
@@ -746,7 +746,7 @@ class TestServerSourceEnv:
         executor = NodeExecutor(manifest=manifest, graph=graph, config=config)
         executor._server._set_source_env('localhost')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.99:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.99:44443'
 
     def test_self_addr_takes_precedence_over_env_var(self):
         """--self-addr CLI arg takes priority over HOMESTAK_SELF_ADDR env var."""
@@ -763,7 +763,7 @@ class TestServerSourceEnv:
         )
         executor._server._set_source_env('localhost')
 
-        assert os.environ.get('HOMESTAK_SOURCE') == 'https://198.51.100.153:44443'
+        assert os.environ.get('HOMESTAK_SERVER') == 'https://198.51.100.153:44443'
 
     def test_validate_addr_rejects_loopback(self):
         """_validate_addr raises ValueError for loopback addresses."""
@@ -1042,8 +1042,8 @@ class TestPveConfigMode:
         mock_pve_config.assert_not_called()
 
     @patch('actions.tofu.TofuApplyAction')
-    def test_pve_self_configure_passes_homestak_apply(self, MockTofu):
-        """PVE self-configure passes homestak_apply='pve-config' to TofuApplyAction."""
+    def test_pve_self_configure_passes_boot_scenario(self, MockTofu):
+        """PVE self-configure passes boot_scenario='pve-config' to TofuApplyAction."""
         manifest = _make_manifest([
             {'name': 'root-pve', 'type': 'pve', 'vmid': 99001,
              'image': 'pve-9', 'preset': 'vm-large'},
@@ -1059,11 +1059,11 @@ class TestPveConfigMode:
         exec_node = graph.get_node('root-pve')
         executor._create_node(exec_node, {})
 
-        # Check TofuApplyAction was created with homestak_apply
+        # Check TofuApplyAction was created with boot_scenario
         call_kwargs = MockTofu.call_args[1] if MockTofu.call_args[1] else {}
         call_args = MockTofu.call_args
         # TofuApplyAction is created with keyword args
-        assert call_kwargs.get('homestak_apply') == 'pve-config'
+        assert call_kwargs.get('boot_scenario') == 'pve-config'
         assert call_kwargs.get('spec') is None
 
     @patch('actions.ssh.WaitForFileAction')

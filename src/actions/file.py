@@ -23,7 +23,7 @@ class RemoveImageAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        user = config.automation_user
+        user = config.vm_user
         sudo = sudo_prefix(user)
         image_name = config.packer_image.replace('.qcow2', '.img')
         image_path = f'{self.image_dir}/{image_name}'
@@ -87,7 +87,7 @@ class DownloadFileAction:
                 duration=time.time() - start
             )
 
-        user = config.automation_user
+        user = config.vm_user
         sudo = sudo_prefix(user)
 
         # Determine filename
@@ -236,11 +236,11 @@ print('\\n'.join(parts))
                 duration=time.time() - start
             )
 
-        user = config.automation_user
+        user = config.vm_user
         sudo = sudo_prefix(user)
 
-        repo = config.packer_release_repo
-        tag = config.packer_release
+        repo = config.image_release_repo
+        tag = config.image_release
 
         url = f'https://github.com/{repo}/releases/download/{tag}/{self.asset_name}'
         dest = f"{self.dest_dir}/{self.asset_name}"

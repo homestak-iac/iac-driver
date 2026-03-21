@@ -40,7 +40,7 @@ class TestEnsureImageAction:
         action = EnsureImageAction(name='test-ensure')
         config = MagicMock()
         config.ssh_host = '198.51.100.61'
-        config.ssh_user = 'root'
+        config.host_user = 'root'
 
         result = action.run(config, {})
         assert result.success is True
@@ -55,7 +55,7 @@ class TestEnsureImageAction:
         action = EnsureImageAction(name='test-ensure')
         config = MagicMock()
         config.ssh_host = '198.51.100.61'
-        config.ssh_user = 'root'
+        config.host_user = 'root'
 
         result = action.run(config, {})
         # Should fail when image not found
@@ -85,13 +85,13 @@ class TestBootstrapAction:
 
         action = BootstrapAction(name='test-bootstrap', host_attr='pve_ip')
         config = MagicMock()
-        config.ssh_user = 'root'
+        config.host_user = 'root'
 
         result = action.run(config, {'pve_ip': '198.51.100.10'})
         assert result.success is True
 
     @patch('actions.pve_lifecycle.run_ssh')
-    @patch.dict('os.environ', {'HOMESTAK_SOURCE': 'https://198.51.100.61:44443', 'HOMESTAK_REF': '_working'}, clear=False)
+    @patch.dict('os.environ', {'HOMESTAK_SERVER': 'https://198.51.100.61:44443', 'HOMESTAK_REF': '_working'}, clear=False)
     def test_serve_repos_uses_insecure_tls(self, mock_ssh):
         """Serve-repos path must pass -k to curl and HOMESTAK_INSECURE=1."""
         from actions.pve_lifecycle import BootstrapAction
@@ -100,7 +100,7 @@ class TestBootstrapAction:
 
         action = BootstrapAction(name='test-bootstrap', host_attr='pve_ip')
         config = MagicMock()
-        config.automation_user = 'homestak'
+        config.vm_user = 'homestak'
 
         result = action.run(config, {'pve_ip': '198.51.100.10'})
         assert result.success is True
@@ -139,7 +139,7 @@ class TestCopySecretsAction:
 
         action = CopySecretsAction(name='test-secrets')
         config = MagicMock()
-        config.automation_user = 'homestak'
+        config.vm_user = 'homestak'
 
         # Create a temporary secrets.yaml so exists() returns True
         secrets = Path('/tmp/test-config/secrets.yaml')

@@ -8,9 +8,26 @@
 - Wire `homestak_apply` through ConfigResolver and executor for PVE self-configure (#312)
 - PVE nodes default to 2-phase self-configure; `execution.mode: push` for legacy 11-phase (#312)
 
+### Changed
+- Change `spec_server` to `server_url` in config and resolver (#314)
+- Change `packer_release` to `image_release` in config (#318)
+- Change `packer_release_repo` to `image_release_repo` in config (#318)
+- Change `homestak_apply` to `boot_scenario` in resolver and executor (#318)
+- Change `ssh_user` to `host_user` in config (#342)
+- Change `automation_user` to `vm_user` in config (#342)
+- Change `HOMESTAK_SOURCE` to `HOMESTAK_SERVER` in server management (#314)
+- Change `--packer-release` CLI flag to `--image-release` (#318)
+
+### Added
+- Add `host_user` to ConfigResolver tfvars output (#342)
+
 ### Fixed
 - Use correct ansible inventory for local bridge playbook in pve-config scenario
 - Pass list/dict extra vars to ansible as JSON body format instead of key=value strings
+- Fix EnsureImageAction and ServerManager to use `host_user` for PVE host SSH (#342)
+
+### Removed
+- Remove `HOMESTAK_SPEC_SERVER` legacy fallback from spec_client (#314)
 
 ## v0.56 - 2026-03-09
 

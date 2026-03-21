@@ -37,7 +37,7 @@ class SSHCommandAction:
 
         logger.info(f"[{self.name}] Running command on {host}...")
         # Use automation_user for SSH to VMs (created via cloud-init)
-        rc, out, err = run_ssh(host, self.command, user=config.automation_user, timeout=self.timeout, jump_host=jump_host)
+        rc, out, err = run_ssh(host, self.command, user=config.vm_user, timeout=self.timeout, jump_host=jump_host)
 
         if rc != 0:
             return ActionResult(
@@ -91,7 +91,7 @@ class WaitForSSHAction:
         deadline = time.time() + self.timeout
         while time.time() < deadline:
             # Use automation_user for SSH to VMs (created via cloud-init)
-            rc, out, _ = run_ssh(host, 'echo ready', user=config.automation_user, timeout=5, jump_host=jump_host)
+            rc, out, _ = run_ssh(host, 'echo ready', user=config.vm_user, timeout=5, jump_host=jump_host)
             if rc == 0 and 'ready' in out:
                 logger.info(f"[{self.name}] SSH available on {host}")
                 return ActionResult(
@@ -144,7 +144,7 @@ class WaitForFileAction:
             rc, out, _ = run_ssh(
                 host,
                 f'test -f {self.file_path} && echo EXISTS',
-                user=config.automation_user,
+                user=config.vm_user,
                 timeout=10,
             )
             if rc == 0 and 'EXISTS' in out:
@@ -160,7 +160,7 @@ class WaitForFileAction:
                 rc, out, _ = run_ssh(
                     host,
                     f'test -f {self.failure_path} && cat {self.failure_path}',
-                    user=config.automation_user,
+                    user=config.vm_user,
                     timeout=10,
                 )
                 if rc == 0 and out.strip():
@@ -206,7 +206,7 @@ class VerifySSHChainAction:
 
         # Wait for SSH on target via jump host
         # Use automation_user for SSH to VMs (created via cloud-init)
-        user = config.automation_user
+        user = config.vm_user
         logger.info(f"[{self.name}] Waiting for SSH on {target} via {jump}...")
         deadline = time.time() + self.timeout
         while time.time() < deadline:

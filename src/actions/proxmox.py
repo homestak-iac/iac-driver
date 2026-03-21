@@ -293,7 +293,7 @@ class StartVMRemoteAction:
                 duration=time.time() - start
             )
 
-        ssh_user = config.automation_user
+        ssh_user = config.vm_user
         logger.info(f"[{self.name}] Starting VM {vm_id} on {pve_host}...")
         rc, _out, err = run_ssh(pve_host, f'sudo qm start {vm_id}',
                                 user=ssh_user, timeout=60)
@@ -345,7 +345,7 @@ class WaitForGuestAgentRemoteAction:
 
         logger.info(f"[{self.name}] Waiting for guest agent on VM {vm_id}...")
 
-        ssh_user = config.automation_user
+        ssh_user = config.vm_user
         leaf_ip = None
         deadline = time.time() + self.timeout
         while time.time() < deadline:
@@ -400,7 +400,7 @@ class DiscoverVMsAction:
                 duration=time.time() - start
             )
 
-        ssh_user = config.automation_user
+        ssh_user = config.vm_user
         sudo = sudo_prefix(ssh_user)
 
         logger.info(f"[{self.name}] Discovering VMs matching '{self.name_pattern}' on {pve_host}...")
@@ -484,7 +484,7 @@ class DestroyDiscoveredVMsAction:
                 duration=time.time() - start
             )
 
-        ssh_user = config.automation_user
+        ssh_user = config.vm_user
         sudo = sudo_prefix(ssh_user)
 
         destroyed = []

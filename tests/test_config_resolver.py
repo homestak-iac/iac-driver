@@ -229,12 +229,12 @@ class TestListPostures:
         assert postures == ['dev', 'prod', 'stage']
 
 
-class TestSpecServerResolution:
-    """Test spec_server resolution for Create → Specify flow (v0.45+)."""
+class TestServerUrlResolution:
+    """Test server_url resolution for Create → Specify flow (v0.45+)."""
 
-    def test_resolve_inline_vm_includes_spec_server(self, site_config_dir, monkeypatch):
-        """resolve_inline_vm should include spec_server from site.yaml defaults."""
-        monkeypatch.delenv('HOMESTAK_SOURCE', raising=False)
+    def test_resolve_inline_vm_includes_server_url(self, site_config_dir, monkeypatch):
+        """resolve_inline_vm should include server_url from site.yaml defaults."""
+        monkeypatch.delenv('HOMESTAK_SERVER', raising=False)
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -244,12 +244,12 @@ class TestSpecServerResolution:
             image='debian-12.img'
         )
 
-        assert 'spec_server' in config
-        assert config['spec_server'] == 'https://controller:44443'
+        assert 'server_url' in config
+        assert config['server_url'] == 'https://controller:44443'
 
-    def test_homestak_source_overrides_spec_server(self, site_config_dir, monkeypatch):
-        """HOMESTAK_SOURCE env var overrides spec_server from site.yaml."""
-        monkeypatch.setenv('HOMESTAK_SOURCE', 'https://10.0.12.138:44443')
+    def test_homestak_source_overrides_server_url(self, site_config_dir, monkeypatch):
+        """HOMESTAK_SERVER env var overrides server_url from site.yaml."""
+        monkeypatch.setenv('HOMESTAK_SERVER', 'https://10.0.12.138:44443')
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -259,11 +259,11 @@ class TestSpecServerResolution:
             image='debian-12.img'
         )
 
-        assert config['spec_server'] == 'https://10.0.12.138:44443'
+        assert config['server_url'] == 'https://10.0.12.138:44443'
 
-    def test_spec_server_falls_back_to_site_yaml(self, site_config_dir, monkeypatch):
-        """Without HOMESTAK_SOURCE, spec_server comes from site.yaml."""
-        monkeypatch.delenv('HOMESTAK_SOURCE', raising=False)
+    def test_server_url_falls_back_to_site_yaml(self, site_config_dir, monkeypatch):
+        """Without HOMESTAK_SERVER, server_url comes from site.yaml."""
+        monkeypatch.delenv('HOMESTAK_SERVER', raising=False)
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -273,7 +273,7 @@ class TestSpecServerResolution:
             image='debian-12.img'
         )
 
-        assert config['spec_server'] == 'https://controller:44443'
+        assert config['server_url'] == 'https://controller:44443'
 
 
 class TestDnsServersResolution:
@@ -281,7 +281,7 @@ class TestDnsServersResolution:
 
     def test_resolve_inline_vm_includes_dns_servers(self, site_config_dir, monkeypatch):
         """resolve_inline_vm should include dns_servers from site.yaml defaults."""
-        monkeypatch.delenv('HOMESTAK_SOURCE', raising=False)
+        monkeypatch.delenv('HOMESTAK_SERVER', raising=False)
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -296,7 +296,7 @@ class TestDnsServersResolution:
 
     def test_resolve_inline_vm_dns_servers_defaults_empty(self, site_config_dir, monkeypatch):
         """resolve_inline_vm should default dns_servers to empty list."""
-        monkeypatch.delenv('HOMESTAK_SOURCE', raising=False)
+        monkeypatch.delenv('HOMESTAK_SERVER', raising=False)
         resolver = ConfigResolver(str(site_config_dir))
         # Override site.yaml to remove dns_servers
         (site_config_dir / 'site.yaml').write_text("""
@@ -321,7 +321,7 @@ class TestProvisioningTokenResolution:
     """Test provisioning token minting in resolve_inline_vm (#231)."""
 
     def test_resolve_inline_vm_mints_token_with_spec(self, site_config_dir):
-        """resolve_inline_vm mints provisioning token when spec and spec_server set."""
+        """resolve_inline_vm mints provisioning token when spec and server_url set."""
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -354,10 +354,10 @@ class TestProvisioningTokenResolution:
 
         assert config['vms'][0]['auth_token'] == ''
 
-    def test_resolve_inline_vm_empty_token_without_spec_server(self, site_config_dir, monkeypatch):
-        """resolve_inline_vm returns empty token when no spec_server configured."""
-        monkeypatch.delenv('HOMESTAK_SOURCE', raising=False)
-        # Override site.yaml to remove spec_server
+    def test_resolve_inline_vm_empty_token_without_server_url(self, site_config_dir, monkeypatch):
+        """resolve_inline_vm returns empty token when no server_url configured."""
+        monkeypatch.delenv('HOMESTAK_SERVER', raising=False)
+        # Override site.yaml to remove server_url
         (site_config_dir / 'site.yaml').write_text(yaml.dump({
             "defaults": {"domain": "test.local", "timezone": "UTC"}
         }))
@@ -373,8 +373,8 @@ class TestProvisioningTokenResolution:
 
         assert config['vms'][0]['auth_token'] == ''
 
-    def test_resolve_inline_vm_mints_token_with_homestak_apply(self, site_config_dir):
-        """resolve_inline_vm mints config token when homestak_apply set (no spec)."""
+    def test_resolve_inline_vm_mints_token_with_boot_scenario(self, site_config_dir):
+        """resolve_inline_vm mints config token when boot_scenario set (no spec)."""
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -382,7 +382,7 @@ class TestProvisioningTokenResolution:
             vmid=99900,
             vm_preset='vm-small',
             image='pve-9',
-            homestak_apply='pve-config',
+            boot_scenario='pve-config',
         )
 
         token = config['vms'][0]['auth_token']
@@ -390,8 +390,8 @@ class TestProvisioningTokenResolution:
         assert token != ''
         assert '.' in token
 
-    def test_resolve_inline_vm_homestak_apply_in_vm_dict(self, site_config_dir):
-        """resolve_inline_vm includes homestak_apply in resolved VM dict."""
+    def test_resolve_inline_vm_boot_scenario_in_vm_dict(self, site_config_dir):
+        """resolve_inline_vm includes boot_scenario in resolved VM dict."""
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -399,12 +399,12 @@ class TestProvisioningTokenResolution:
             vmid=99900,
             vm_preset='vm-small',
             image='pve-9',
-            homestak_apply='pve-config',
+            boot_scenario='pve-config',
         )
-        assert config['vms'][0]['homestak_apply'] == 'pve-config'
+        assert config['vms'][0]['boot_scenario'] == 'pve-config'
 
-    def test_resolve_inline_vm_homestak_apply_defaults_empty(self, site_config_dir):
-        """resolve_inline_vm defaults homestak_apply to empty string."""
+    def test_resolve_inline_vm_boot_scenario_defaults_empty(self, site_config_dir):
+        """resolve_inline_vm defaults boot_scenario to empty string."""
         resolver = ConfigResolver(str(site_config_dir))
         config = resolver.resolve_inline_vm(
             node='test-node',
@@ -413,7 +413,7 @@ class TestProvisioningTokenResolution:
             vm_preset='vm-small',
             image='debian-12.img',
         )
-        assert config['vms'][0]['homestak_apply'] == ''
+        assert config['vms'][0]['boot_scenario'] == ''
 
     def test_resolve_inline_vm_vm_config_apply(self, site_config_dir):
         """resolve_inline_vm with vm-config uses spec for token."""
@@ -425,11 +425,11 @@ class TestProvisioningTokenResolution:
             vm_preset='vm-small',
             image='debian-12.img',
             spec='base',
-            homestak_apply='vm-config',
+            boot_scenario='vm-config',
         )
-        # With spec, token is minted from spec (not homestak_apply)
+        # With spec, token is minted from spec (not boot_scenario)
         assert config['vms'][0]['auth_token'] != ''
-        assert config['vms'][0]['homestak_apply'] == 'vm-config'
+        assert config['vms'][0]['boot_scenario'] == 'vm-config'
 
 
 class TestPosturesAuthModel:

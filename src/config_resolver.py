@@ -144,7 +144,7 @@ class ConfigResolver:
         vm_preset: Optional[str] = None,
         image: Optional[str] = None,
         spec: Optional[str] = None,
-        homestak_apply: Optional[str] = None,
+        boot_scenario: Optional[str] = None,
     ) -> dict:
         """Resolve inline VM definition.
 
@@ -158,7 +158,7 @@ class ConfigResolver:
             vm_preset: Preset name (matches presets/{vm_preset}.yaml)
             image: Image name (required for vm_preset mode)
             spec: Spec FK for provisioning token (specs/{spec}.yaml)
-            homestak_apply: Cloud-init apply behavior ('vm-config' or 'pve-config')
+            boot_scenario: Cloud-init boot scenario ('vm-config' or 'pve-config')
 
         Returns:
             Dict with all resolved config ready for tfvars.json
@@ -184,11 +184,11 @@ class ConfigResolver:
         # Site defaults
         defaults = self.site.get("defaults", {})
 
-        # Spec server for Create → Config flow (#231: HOMESTAK_SERVER)
-        # In nested deployments, the inner operator sets HOMESTAK_SOURCE to
+        # Server URL for Create → Config flow (#231: HOMESTAK_SERVER)
+        # In nested deployments, the inner operator sets HOMESTAK_SERVER to
         # the local server URL. Use it as override so VMs reach the nearest
         # server, not the outer host from site.yaml.
-        spec_server = os.environ.get("HOMESTAK_SOURCE") or defaults.get("spec_server", "")
+        server_url = os.environ.get("HOMESTAK_SERVER") or defaults.get("server_url", "")
 
         # Build VM instance dict for _resolve_vm
         vm_instance = {
@@ -203,13 +203,13 @@ class ConfigResolver:
         # Resolve the single VM
         resolved_vm = self._resolve_vm(vm_instance, vmid, defaults)
 
-        # Cloud-init apply behavior (vm-config, pve-config, or empty)
-        resolved_vm["homestak_apply"] = homestak_apply or ""
+        # Cloud-init boot scenario (vm-config, pve-config, or empty)
+        resolved_vm["boot_scenario"] = boot_scenario or ""
 
-        # Mint provisioning token if spec server and spec/apply are configured
-        if spec_server and spec:
+        # Mint provisioning token if server URL and spec/scenario are configured
+        if server_url and spec:
             resolved_vm["auth_token"] = self._mint_provisioning_token(vm_name, spec)
-        elif spec_server and homestak_apply:
+        elif server_url and boot_scenario:
             # PVE self-configure: token for /config endpoint (s claim unused)
             resolved_vm["auth_token"] = self._mint_provisioning_token(vm_name, 'config')
         else:
@@ -232,13 +232,14 @@ class ConfigResolver:
             "api_endpoint": api_endpoint,
             "api_token": api_token,
             "ssh_private_key_file": self._find_ssh_private_key(),
-            "automation_user": defaults.get("automation_user", "homestak"),
+            "vm_user": defaults.get("vm_user", "homestak"),
+            "host_user": defaults.get("host_user", "root"),
             "ssh_host": ssh_host,
             "datastore": node_config["datastore"],
             "root_password": passwords.get("vm_root", ""),
             "ssh_keys": ssh_keys_list,
-            # Spec server for Create → Specify flow (v0.45+)
-            "spec_server": spec_server,
+            # Server URL for Create → Config flow (v0.45+)
+            "server_url": server_url,
             # DNS servers for cloud-init (v0.51+, #229)
             "dns_servers": defaults.get("dns_servers", []),
             "vms": [resolved_vm],

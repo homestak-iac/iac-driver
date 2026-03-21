@@ -65,7 +65,7 @@ def _create_ip_config(ip: str, ssh_user: str | None = None):
     config = HostConfig(name=ip, config_file=Path('/dev/null'))
     config.ssh_host = ip
     if ssh_user:
-        config.ssh_user = ssh_user
+        config.host_user = ssh_user
     config.is_host_only = True
     return config
 
@@ -336,12 +336,12 @@ def _resolve_host(args, scenario, available_hosts):
 
     # Apply user@ override if specified
     if ssh_user_override and not is_raw_ip:
-        config.ssh_user = ssh_user_override
+        config.host_user = ssh_user_override
 
-    # Override packer release if specified (CLI takes precedence)
-    if args.packer_release:
-        config.packer_release = args.packer_release
-        logger.info(f"Using packer release override: {args.packer_release}")
+    # Override image release if specified (CLI takes precedence)
+    if args.image_release:
+        config.image_release = args.image_release
+        logger.info(f"Using image release override: {args.image_release}")
 
     return (config, None)
 
@@ -522,8 +522,8 @@ def main():
         help='Save/load scenario context to file for chained runs (e.g., constructor then destructor)'
     )
     parser.add_argument(
-        '--packer-release',
-        help='Packer release tag for image downloads (e.g., v0.8.0-rc1 or latest). Overrides site.yaml default.'
+        '--image-release',
+        help='Image release tag for downloads (e.g., v0.8.0-rc1 or latest). Overrides site.yaml default.'
     )
     parser.add_argument(
         '--timeout', '-t',
