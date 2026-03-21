@@ -434,7 +434,7 @@ class NodeExecutor:
         # 6. Run pve-setup post-scenario (ansible handles privilege escalation)
         phases.append(('post_scenario', RecursiveScenarioAction(
             name=f'post-{mn.name}',
-            raw_command='~/bootstrap/homestak scenario pve-setup --json-output --local --skip-preflight',
+            raw_command='~/bootstrap/homestak scenario pve-setup --json-output --local',
             host_attr=host_key,
             timeout=1200,
             ssh_user=self.config.vm_user,
@@ -891,7 +891,6 @@ class NodeExecutor:
             f'--manifest-json {shlex.quote(subtree_json)} '
             f'-H {shlex.quote(inner_hostname)} '
             f'--self-addr {shlex.quote(ip)} '
-            f'--skip-preflight '
             f'--json-output'
         )
 
@@ -933,7 +932,6 @@ class NodeExecutor:
             f'--manifest-json {shlex.quote(subtree_json)} '
             f'-H {shlex.quote(inner_hostname)} '
             f'--self-addr {shlex.quote(ip)} '
-            f'--skip-preflight '
             f'--json-output --yes'
         )
 
