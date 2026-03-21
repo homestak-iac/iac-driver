@@ -20,19 +20,20 @@
 - Change `n2-tiered` references to `n2-push`, `n2-mixed` to `n2-pull` (meta#352)
 
 ### Added
-- Add `host_user` to ConfigResolver tfvars output (#342)
 - Add scenario-aware preflight validation — respects `requires_host_config` to skip site config checks (#315)
 - Add bare repo refresh on server reuse — sends SIGHUP to re-prepare when reusing running server (#316)
 
 ### Fixed
 - Use correct ansible inventory for local bridge playbook in pve-config scenario
 - Pass list/dict extra vars to ansible as JSON body format instead of key=value strings
-- Fix EnsureImageAction and ServerManager to use `host_user` for PVE host SSH (#342)
+- Fix EnsureImageAction, ServerManager, and ConfigResolver to continue using `vm_user` — `host_user` was incorrectly introduced in Sprint 1 (reverted, see #133)
 
 ### Removed
 - Remove `HOMESTAK_SPEC_SERVER` legacy fallback from spec_client (#314)
-- Remove IPv6 disable/enable toggle around `pvecm updatecerts` — no longer needed on Debian 13 + PVE 9.1 (#228)
 - Remove `--skip-preflight` from delegated manifest calls in executor (#315)
+
+### Documentation
+- Improve IPv6 disable/enable toggle documentation — toggle kept for PVE VM compatibility, clarified when needed (#228)
 
 ## v0.56 - 2026-03-09
 
