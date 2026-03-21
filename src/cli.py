@@ -221,7 +221,7 @@ def print_usage():
     print()
     print("Examples:")
     print("  ./run.sh manifest apply -M n1-push -H srv1")
-    print("  ./run.sh manifest test -M n2-tiered -H srv1")
+    print("  ./run.sh manifest test -M n2-push -H srv1")
     print("  ./run.sh config fetch --insecure")
     print("  ./run.sh config apply")
     print("  ./run.sh server start --port 44443")

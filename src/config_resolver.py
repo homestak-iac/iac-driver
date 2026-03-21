@@ -233,7 +233,6 @@ class ConfigResolver:
             "api_token": api_token,
             "ssh_private_key_file": self._find_ssh_private_key(),
             "vm_user": defaults.get("vm_user", "homestak"),
-            "host_user": defaults.get("host_user", "root"),
             "ssh_host": ssh_host,
             "datastore": node_config["datastore"],
             "root_password": passwords.get("vm_root", ""),

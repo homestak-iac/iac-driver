@@ -279,7 +279,9 @@ class _CreateApiTokenPhase:
             )
 
         # Regenerate SSL certs and restart pveproxy before token creation
-        # Fixes IPv6-related SSL issues on fresh PVE installs
+        # IPv6 must be temporarily disabled — pvecm updatecerts generates
+        # certificates with IPv6 bindings that break API verification on
+        # PVE VMs. Bare-metal hosts work without this, but VMs need it (#228).
         logger.debug("Regenerating PVE SSL certificates...")
         subprocess.run(
             'sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 && '

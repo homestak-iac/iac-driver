@@ -53,7 +53,7 @@ class EnsureImageAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        ssh_user = config.host_user
+        ssh_user = config.vm_user
         image_name = config.packer_image.replace('.qcow2', '.img')
         image_path = f'/var/lib/vz/template/iso/{image_name}'
 
@@ -158,7 +158,9 @@ class CreateApiTokenAction:
             )
 
         # Step 1: Regenerate PVE SSL certificates and restart pveproxy
-        # This fixes IPv6-related SSL issues on fresh installs
+        # IPv6 must be temporarily disabled — pvecm updatecerts generates
+        # certificates with IPv6 bindings that break API verification on
+        # PVE VMs. Bare-metal hosts work without this, but VMs need it (#228).
         ssl_cmd = '''
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
 sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1

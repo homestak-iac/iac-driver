@@ -8,7 +8,9 @@ propagation, and address resolution for nested deployments.
 import json
 import logging
 import os
+import signal
 import socket
+import time
 from typing import Optional
 
 from common import run_command, run_ssh
@@ -82,6 +84,17 @@ class ServerManager:
                     logger.info("Server already running on %s:%d (reusing)",
                                 self.ssh_host, self.port)
                     self._started = False
+                    pid = status.get('pid')
+                    if pid:
+                        if self._is_local:
+                            os.kill(pid, signal.SIGHUP)
+                        else:
+                            self._run_on_host(
+                                f'kill -HUP {pid}', timeout=5)
+                        logger.info(
+                            "Refreshed bare repos on running server "
+                            "(PID %d)", pid)
+                        time.sleep(1)
                     self._set_source_env(self.ssh_host)
                     return
             except (json.JSONDecodeError, ValueError):

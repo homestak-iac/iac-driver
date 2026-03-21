@@ -41,7 +41,7 @@ Options:
 
 Examples:
   ./scripts/parallel-test.sh -H mother n1-push n1-pull
-  ./scripts/parallel-test.sh -H mother n1-push n1-pull n2-tiered --verbose
+  ./scripts/parallel-test.sh -H mother n1-push n1-pull n2-push --verbose
 
 The script starts a shared server, runs tests concurrently, and
 stops the server when all tests complete (or on interrupt).
