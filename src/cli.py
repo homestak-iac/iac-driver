@@ -65,7 +65,7 @@ def _create_ip_config(ip: str, ssh_user: str | None = None):
     config = HostConfig(name=ip, config_file=Path('/dev/null'))
     config.ssh_host = ip
     if ssh_user:
-        config.ssh_user = ssh_user
+        config.host_user = ssh_user
     config.is_host_only = True
     return config
 
@@ -336,7 +336,7 @@ def _resolve_host(args, scenario, available_hosts):
 
     # Apply user@ override if specified
     if ssh_user_override and not is_raw_ip:
-        config.ssh_user = ssh_user_override
+        config.host_user = ssh_user_override
 
     # Override image release if specified (CLI takes precedence)
     if args.image_release:

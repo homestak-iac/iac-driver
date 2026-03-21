@@ -45,8 +45,8 @@ class HostConfig:
     config_file: Path
     api_endpoint: str = ''
     ssh_host: str = ''
-    ssh_user: str = field(default_factory=lambda: os.getenv('USER', ''))
-    automation_user: str = 'homestak'  # For SSH to VMs (created via cloud-init)
+    host_user: str = field(default_factory=lambda: os.getenv('USER', ''))  # SSH user for PVE hosts
+    vm_user: str = 'homestak'  # SSH user for VMs (created via cloud-init)
     ssh_key: Path = field(default_factory=lambda: Path.home() / '.ssh' / 'id_rsa')
 
     # Image release settings
@@ -112,13 +112,13 @@ class HostConfig:
             # Store resolved token for use by scenarios
             self._api_token = secrets['api_tokens'].get(api_token_key, '')
 
-        # SSH user: node > site > default (for PVE host connections)
-        if ssh_user := node_config.get('ssh_user', site_defaults.get('ssh_user')):
-            self.ssh_user = ssh_user
+        # Host user: node > site > default (for PVE host connections)
+        if host_user := node_config.get('host_user', site_defaults.get('host_user')):
+            self.host_user = host_user
 
-        # Automation user: for SSH to VMs created via cloud-init
-        if automation_user := site_defaults.get('automation_user'):
-            self.automation_user = automation_user
+        # VM user: for SSH to VMs created via cloud-init
+        if vm_user := site_defaults.get('vm_user'):
+            self.vm_user = vm_user
 
         # Image release: site.yaml > default
         if image_release := site_defaults.get('image_release'):
@@ -164,16 +164,16 @@ class HostConfig:
                     # Strip CIDR suffix (e.g., "198.51.100.61/24" -> "198.51.100.61")
                     self.ssh_host = address.split('/')[0]
 
-        # SSH user from access section or site defaults
+        # Host user from access section or site defaults
         if access := host_config.get('access', {}):
-            if ssh_user := access.get('ssh_user'):
-                self.ssh_user = ssh_user
-        elif ssh_user := site_defaults.get('ssh_user'):
-            self.ssh_user = ssh_user
+            if host_user := access.get('host_user'):
+                self.host_user = host_user
+        elif host_user := site_defaults.get('host_user'):
+            self.host_user = host_user
 
-        # Automation user: for SSH to VMs created via cloud-init
-        if automation_user := site_defaults.get('automation_user'):
-            self.automation_user = automation_user
+        # VM user: for SSH to VMs created via cloud-init
+        if vm_user := site_defaults.get('vm_user'):
+            self.vm_user = vm_user
 
         # Image release: site.yaml > default
         if image_release := site_defaults.get('image_release'):

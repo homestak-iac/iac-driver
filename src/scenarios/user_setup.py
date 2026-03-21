@@ -57,7 +57,7 @@ class _CreateUserPhase:
                 name='user-remote',
                 playbook='playbooks/user.yml',
                 inventory='inventory/remote-dev.yml',
-                extra_vars={'ansible_user': config.ssh_user},
+                extra_vars={'ansible_user': config.host_user},
                 host_key='remote_ip',
                 wait_for_ssh_before=True,
             )

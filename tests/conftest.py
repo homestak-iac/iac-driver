@@ -27,8 +27,8 @@ class MockHostConfig:
     """
     name: str = 'test-host'
     ssh_host: str = '192.0.2.1'
-    ssh_user: str = 'root'
-    automation_user: str = 'homestak'
+    host_user: str = 'root'
+    vm_user: str = 'homestak'
     vm_id: int = 99913
     config_file: Path = Path('/tmp/test.yaml')
 
@@ -102,7 +102,7 @@ def site_config_dir(tmp_path):
 defaults:
   timezone: America/Denver
   bridge: vmbr0
-  ssh_user: root
+  host_user: root
   gateway: 198.51.100.1
   dns_servers:
     - 198.51.100.1

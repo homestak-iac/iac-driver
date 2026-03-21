@@ -59,7 +59,7 @@ class NodeExecutor:
         server_url = getattr(self.config, 'server_url', '') or ''
         self._server = ServerManager(
             ssh_host=self.config.ssh_host,
-            ssh_user=self.config.automation_user,
+            ssh_user=self.config.host_user,
             self_addr=self.self_addr,
             port=ServerManager.resolve_port(server_url),
         )
@@ -437,7 +437,7 @@ class NodeExecutor:
             raw_command='~/bootstrap/homestak scenario pve-setup --json-output --local --skip-preflight',
             host_attr=host_key,
             timeout=1200,
-            ssh_user=self.config.automation_user,
+            ssh_user=self.config.vm_user,
         )))
 
         # 7. Configure vmbr0 bridge
@@ -708,7 +708,7 @@ class NodeExecutor:
             json.dump(ansible_vars, f, indent=2)
             vars_file = f.name
 
-        user = self.config.automation_user
+        user = self.config.vm_user
 
         # Ensure apt cache is fresh — packer cleanup removes apt lists.
         # Retry handles brief lock contention from cloud-init's apt module.
@@ -903,7 +903,7 @@ class NodeExecutor:
             raw_command=raw_cmd,
             context_keys=context_keys,
             timeout=1200,
-            ssh_user=self.config.automation_user,
+            ssh_user=self.config.vm_user,
         )
 
         return action.run(self.config, context)
@@ -945,7 +945,7 @@ class NodeExecutor:
             raw_command=raw_cmd,
             context_keys=[],
             timeout=600,
-            ssh_user=self.config.automation_user,
+            ssh_user=self.config.vm_user,
         )
 
         return action.run(self.config, context)

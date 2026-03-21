@@ -23,7 +23,7 @@ class RemoveImageAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        user = config.automation_user
+        user = config.vm_user
         sudo = sudo_prefix(user)
         image_name = config.packer_image.replace('.qcow2', '.img')
         image_path = f'{self.image_dir}/{image_name}'
@@ -87,7 +87,7 @@ class DownloadFileAction:
                 duration=time.time() - start
             )
 
-        user = config.automation_user
+        user = config.vm_user
         sudo = sudo_prefix(user)
 
         # Determine filename
@@ -236,7 +236,7 @@ print('\\n'.join(parts))
                 duration=time.time() - start
             )
 
-        user = config.automation_user
+        user = config.vm_user
         sudo = sudo_prefix(user)
 
         repo = config.image_release_repo

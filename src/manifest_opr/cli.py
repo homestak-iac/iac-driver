@@ -150,7 +150,7 @@ def _load_manifest_and_config(args):
 
     config = load_host_config(host)
     if ssh_user_override:
-        config.ssh_user = ssh_user_override
+        config.host_user = ssh_user_override
     return manifest, config
 
 

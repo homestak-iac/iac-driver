@@ -40,7 +40,7 @@ class TestEnsureImageAction:
         action = EnsureImageAction(name='test-ensure')
         config = MagicMock()
         config.ssh_host = '198.51.100.61'
-        config.ssh_user = 'root'
+        config.host_user = 'root'
 
         result = action.run(config, {})
         assert result.success is True
@@ -55,7 +55,7 @@ class TestEnsureImageAction:
         action = EnsureImageAction(name='test-ensure')
         config = MagicMock()
         config.ssh_host = '198.51.100.61'
-        config.ssh_user = 'root'
+        config.host_user = 'root'
 
         result = action.run(config, {})
         # Should fail when image not found
@@ -85,7 +85,7 @@ class TestBootstrapAction:
 
         action = BootstrapAction(name='test-bootstrap', host_attr='pve_ip')
         config = MagicMock()
-        config.ssh_user = 'root'
+        config.host_user = 'root'
 
         result = action.run(config, {'pve_ip': '198.51.100.10'})
         assert result.success is True
@@ -100,7 +100,7 @@ class TestBootstrapAction:
 
         action = BootstrapAction(name='test-bootstrap', host_attr='pve_ip')
         config = MagicMock()
-        config.automation_user = 'homestak'
+        config.vm_user = 'homestak'
 
         result = action.run(config, {'pve_ip': '198.51.100.10'})
         assert result.success is True
@@ -139,7 +139,7 @@ class TestCopySecretsAction:
 
         action = CopySecretsAction(name='test-secrets')
         config = MagicMock()
-        config.automation_user = 'homestak'
+        config.vm_user = 'homestak'
 
         # Create a temporary secrets.yaml so exists() returns True
         secrets = Path('/tmp/test-config/secrets.yaml')

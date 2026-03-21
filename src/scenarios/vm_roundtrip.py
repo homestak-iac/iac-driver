@@ -83,7 +83,7 @@ class StartServerAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        ssh_user = config.automation_user
+        ssh_user = config.vm_user
         iac_dir = '~/iac/iac-driver'
 
         # Check if iac-driver exists on remote host
@@ -171,7 +171,7 @@ class VerifyEnvVarsAction:
         # Read the profile.d file
         cmd = 'cat /etc/profile.d/homestak.sh 2>/dev/null || echo "FILE_NOT_FOUND"'
         logger.info(f"[{self.name}] Checking env vars on {host}...")
-        _, out, _ = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
+        _, out, _ = run_ssh(host, cmd, user=config.vm_user, timeout=self.timeout)
 
         if 'FILE_NOT_FOUND' in out:
             return ActionResult(
@@ -237,7 +237,7 @@ class VerifyServerReachableAction:
         # Curl the health endpoint (allow self-signed cert)
         cmd = f'curl -sk {server_url}/health 2>&1 || echo "CURL_FAILED"'
         logger.info(f"[{self.name}] Testing connectivity to {server_url} from {host}...")
-        rc, out, _ = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
+        rc, out, _ = run_ssh(host, cmd, user=config.vm_user, timeout=self.timeout)
 
         if 'CURL_FAILED' in out or rc != 0:
             return ActionResult(
@@ -273,7 +273,7 @@ class StopServerAction:
         start = time.time()
 
         pve_host = config.ssh_host
-        ssh_user = config.automation_user
+        ssh_user = config.vm_user
         iac_dir = '~/iac/iac-driver'
 
         stop_cmd = f'cd {iac_dir} && ./run.sh server stop --port {self.server_port}'
@@ -313,7 +313,7 @@ class VerifyPackagesAction:
         missing = []
         for pkg in self.packages:
             cmd = f'dpkg -s {pkg} 2>/dev/null | grep -q "Status: install ok installed" && echo INSTALLED || echo MISSING'
-            rc, out, _ = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
+            rc, out, _ = run_ssh(host, cmd, user=config.vm_user, timeout=self.timeout)
             if 'MISSING' in out or rc != 0:
                 missing.append(pkg)
 
@@ -352,7 +352,7 @@ class VerifyUserAction:
             )
 
         cmd = f'id {self.username} 2>/dev/null && echo USER_EXISTS || echo USER_MISSING'
-        rc, out, _ = run_ssh(host, cmd, user=config.automation_user, timeout=self.timeout)
+        rc, out, _ = run_ssh(host, cmd, user=config.vm_user, timeout=self.timeout)
 
         if 'USER_MISSING' in out or rc != 0:
             return ActionResult(

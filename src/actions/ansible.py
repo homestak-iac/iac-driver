@@ -91,7 +91,7 @@ class AnsiblePlaybookAction:
             '-i', self.inventory,
             self.playbook,
             '-e', f'ansible_host={target_host}',
-            '-e', f'ansible_user={config.ssh_user}'
+            '-e', f'ansible_user={config.host_user}'
         ]
 
         # Add resolved config vars first (extra_vars can override)
@@ -264,7 +264,7 @@ class EnsurePVEAction:
             'playbooks/pve-install.yml',
             '-e', f'ansible_host={target_host}',
             '-e', f'pve_hostname={self.pve_hostname}',
-            '-e', f'ansible_user={config.ssh_user}',
+            '-e', f'ansible_user={config.host_user}',
         ]
 
         rc, out, err = run_command(cmd, cwd=ansible_dir, timeout=self.timeout)

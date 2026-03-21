@@ -37,8 +37,8 @@ def _make_config():
     config = MagicMock()
     config.name = 'test-host'
     config.ssh_host = '198.51.100.61'
-    config.ssh_user = 'root'
-    config.automation_user = 'homestak'
+    config.host_user = 'root'
+    config.vm_user = 'homestak'
     return config
 
 
