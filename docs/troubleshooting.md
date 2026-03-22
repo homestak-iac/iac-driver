@@ -45,7 +45,7 @@ The server daemon serves specs and config bundles over HTTPS. The executor start
 it automatically during manifest operations.
 
 **Port already in use:** Another server instance is running. Run `./run.sh server
-stop`. If the PID file is stale, remove `$HOMESTAK_ROOT/.state/server/server.pid`.
+stop`. If the PID file is stale, remove `$HOMESTAK_ROOT/.run/server-{port}.pid`.
 
 **Stale bare repos:** The server caches repo clones. Send SIGHUP to refresh without
 restarting:
