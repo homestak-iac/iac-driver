@@ -1,7 +1,7 @@
 # Operator Engine
 
 
-The operator engine (`manifest_opr/`) walks a manifest graph to execute create/destroy/test lifecycle operations. See [node-orchestration.md](../../dev/meta/docs/arch/node-orchestration.md) for topology patterns and execution model comparison.
+The operator engine (`manifest_opr/`) walks a manifest graph to execute create/destroy/test lifecycle operations. See `$HOMESTAK_ROOT/dev/meta/docs/arch/node-orchestration.md` for topology patterns and execution model comparison.
 
 ## Manifest Schema
 
