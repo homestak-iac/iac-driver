@@ -132,4 +132,4 @@ make decrypt   # Decrypt secrets.yaml (requires age key)
 | `--json-output` | Structured JSON to stdout (logs to stderr) |
 | `--skip-preflight` | Bypass pre-flight validation checks |
 | `--depth N` | Limit manifest to first N levels |
-| `--timeout N` | Overall timeout in seconds |
+| `--timeout N` | Overall timeout in seconds (scenarios only) |

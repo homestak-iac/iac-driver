@@ -51,7 +51,7 @@ The server daemon is central to manifest orchestration — spec discovery, pull-
 | Survives SSH disconnect | Yes | Yes | Yes |
 | Survives reboot | No | No | Yes (systemd) |
 | Restart on crash | No | No | Yes (systemd) |
-| Structured logging | `/var/log/` path | `/var/log/` path | journald |
+| Structured logging | `$HOMESTAK_ROOT/logs/` path | `$HOMESTAK_ROOT/logs/` path | journald |
 | Log rotation | No | No | Yes (logrotate) |
 
 ## Proposed Solution
@@ -139,7 +139,7 @@ Parent (CLI caller)
 
 ```bash
 # Start as daemon (blocks until ready, then returns)
-./run.sh server start [--port 44443] [--log /var/log/homestak/server.log]
+./run.sh server start [--port 44443] [--log $HOMESTAK_ROOT/logs/server.log]
 
 # Start in foreground (existing behavior, unchanged — for development)
 ./run.sh serve [--port 44443]
@@ -224,7 +224,7 @@ Specs: 3 available
 
 ### 7. Logging
 
-**Location:** `/var/log/homestak/server.log`. Override with `--log <path>`. No fallback — daemon mode requires a bootstrapped host.
+**Location:** `$HOMESTAK_ROOT/logs/server.log`. Override with `--log <path>`. No fallback — daemon mode requires a bootstrapped host.
 
 **Format:** Same as current (`%(asctime)s [%(levelname)s] %(message)s`). No change needed for dev+stage.
 
@@ -421,7 +421,7 @@ kill -9 $(cat $HOMESTAK_ROOT/.run/server-44443.pid)  # Simulate crash
 4. **Add `server start/stop/status`** to `src/server/cli.py` and `src/cli.py` routing
 5. **Update actions** — rename and simplify `StartSpecServerAction` / `StopSpecServerAction`
 6. **Operator integration** — auto-lifecycle for manifest verbs and pull-mode scenarios
-7. **Logging** — `/var/log/` path, no fallback
+7. **Logging** — `$HOMESTAK_ROOT/logs/` path, no fallback
 8. **Validation** — n1-pull and pull-vm-roundtrip must pass reliably
 
 ## Deferred to Prod Maturity
@@ -442,7 +442,7 @@ kill -9 $(cat $HOMESTAK_ROOT/.run/server-44443.pid)  # Simulate crash
 | 4. PID management | REQ-CTL-005, REQ-CTL-018, REQ-CTL-019 | CTL-005 enhanced; new: port-qualified PID file, stale detection |
 | 5. server stop | REQ-CTL-005, REQ-CTL-020 | CTL-005 enhanced; new: SIGTERM→SIGKILL escalation |
 | 6. server status | REQ-CTL-021 | New: JSON output, structured exit codes |
-| 7. Logging | REQ-CTL-022 | New: `/var/log/` path, no fallback |
+| 7. Logging | REQ-CTL-022 | New: `$HOMESTAK_ROOT/logs/` path, no fallback |
 | 8. Operator lifecycle | REQ-CTL-023 | New: auto-start/stop for manifest verbs |
 | Test plan (idempotency) | REQ-CTL-024 | New: idempotent start/stop |
 
