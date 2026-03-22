@@ -228,7 +228,7 @@ Detailed implementation documentation:
 
 | Document | Covers |
 |----------|--------|
-| [node-orchestration.md](../../dev/meta/docs/arch/node-orchestration.md) | Topology patterns, execution models, system test catalog |
+| `$HOMESTAK_ROOT/dev/meta/docs/arch/node-orchestration.md` | Topology patterns, execution models, system test catalog |
 | [server-daemon.md](docs/server-daemon.md) | Daemon architecture, PID management, operator integration |
 | [config-phase.md](docs/config-phase.md) | Push/pull execution, spec-to-ansible mapping |
 | [provisioning-token.md](docs/provisioning-token.md) | HMAC token format, signing, verification |
