@@ -14,7 +14,7 @@ Phases:
 7. inject_self_ssh_key — Add own pubkey to secrets.yaml for child VMs
 8. write_marker       — Write completion marker for parent polling
 
-See docs/designs/pve-self-configure.md for design rationale.
+See docs/pve-self-configure.md for design rationale.
 """
 
 import json

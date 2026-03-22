@@ -8,8 +8,8 @@ This repo is part of the homestak polyrepo workspace. For project architecture,
 development lifecycle, sprint/release process, and cross-repo conventions, see:
 
 - `~/homestak/dev/meta/CLAUDE.md` — primary reference
-- `docs/lifecycle/` in meta — 7-phase development process
-- `docs/CLAUDE-GUIDELINES.md` in meta — documentation standards
+- `docs/process/` in meta — 7-phase development process
+- `docs/standards/claude-guidelines.md` in meta — documentation standards
 
 When working in a scoped session (this repo only), follow the same sprint/release
 process defined in meta. Use `/session save` before context compaction and
@@ -228,11 +228,11 @@ Detailed implementation documentation:
 
 | Document | Covers |
 |----------|--------|
-| [node-orchestration.md](../docs/designs/node-orchestration.md) | Topology patterns, execution models, system test catalog |
-| [server-daemon.md](../docs/designs/server-daemon.md) | Daemon architecture, PID management, operator integration |
-| [config-phase.md](../docs/designs/config-phase.md) | Push/pull execution, spec-to-ansible mapping |
-| [provisioning-token.md](../docs/designs/provisioning-token.md) | HMAC token format, signing, verification |
-| [pve-self-configure.md](../docs/designs/pve-self-configure.md) | 2-phase PVE self-configure model, pve-config scenario |
-| [scenario-consolidation.md](../docs/designs/scenario-consolidation.md) | Scenario migration, PVE lifecycle phases |
-| [node-lifecycle.md](../docs/designs/node-lifecycle.md) | Single-node lifecycle (create/config/run/destroy) |
-| [test-strategy.md](../docs/designs/test-strategy.md) | Test hierarchy, system test catalog (ST-1 through ST-8) |
+| [node-orchestration.md](../../dev/meta/docs/arch/node-orchestration.md) | Topology patterns, execution models, system test catalog |
+| [server-daemon.md](docs/server-daemon.md) | Daemon architecture, PID management, operator integration |
+| [config-phase.md](docs/config-phase.md) | Push/pull execution, spec-to-ansible mapping |
+| [provisioning-token.md](docs/provisioning-token.md) | HMAC token format, signing, verification |
+| [pve-self-configure.md](docs/pve-self-configure.md) | 2-phase PVE self-configure model, pve-config scenario |
+| [scenario-consolidation.md](docs/scenario-consolidation.md) | Scenario migration, PVE lifecycle phases |
+| [node-lifecycle.md](docs/node-lifecycle.md) | Single-node lifecycle (create/config/run/destroy) |
+| [test-strategy.md](docs/test-strategy.md) | Test hierarchy, system test catalog (ST-1 through ST-8) |

@@ -1,7 +1,7 @@
 # Server Daemon
 
 
-The server daemon serves specs and git repos over HTTPS. See [server-daemon.md](../docs/designs/server-daemon.md) for architecture, double-fork daemonization, PID management, and operator lifecycle integration.
+The server daemon serves specs and git repos over HTTPS. See [server-daemon.md](server-daemon.md) for architecture, double-fork daemonization, PID management, and operator lifecycle integration.
 
 ## Management
 
@@ -27,6 +27,6 @@ Operator (executor.py) auto-manages server lifecycle for manifest verbs with ref
 | GET | `/{repo}.git/*` | Bearer | Git dumb HTTP protocol |
 | GET | `/{repo}.git/{path}` | Bearer | Raw file extraction |
 
-Spec endpoints authenticate via HMAC-signed provisioning tokens. See [provisioning-token.md](../docs/designs/provisioning-token.md).
+Spec endpoints authenticate via HMAC-signed provisioning tokens. See [provisioning-token.md](provisioning-token.md).
 
 Auto-generates self-signed TLS certificate if none provided via `--cert`/`--key`.

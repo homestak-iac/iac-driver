@@ -5,7 +5,7 @@ Authenticated by provisioning token (same as /spec). Distinct purpose:
 /spec serves what a VM should become; /config serves operational config
 for PVE nodes (site defaults, secrets, private key).
 
-See docs/designs/pve-self-configure.md for design rationale.
+See docs/pve-self-configure.md for design rationale.
 """
 
 import logging

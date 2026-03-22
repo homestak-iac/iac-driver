@@ -1,7 +1,7 @@
 # Operator Engine
 
 
-The operator engine (`manifest_opr/`) walks a manifest graph to execute create/destroy/test lifecycle operations. See [node-orchestration.md](../docs/designs/node-orchestration.md) for topology patterns and execution model comparison.
+The operator engine (`manifest_opr/`) walks a manifest graph to execute create/destroy/test lifecycle operations. See [node-orchestration.md](../../dev/meta/docs/arch/node-orchestration.md) for topology patterns and execution model comparison.
 
 ## Manifest Schema
 
@@ -61,14 +61,14 @@ This recursion handles arbitrary depth without limits.
 
 ## Execution Modes
 
-Nodes use **push** (default) or **pull** for config phase. See [config-phase.md](../docs/designs/config-phase.md) for spec-to-ansible mapping and implementation details.
+Nodes use **push** (default) or **pull** for config phase. See [config-phase.md](config-phase.md) for spec-to-ansible mapping and implementation details.
 
 | Mode | How Config Runs | Operator Behavior |
 |------|----------------|-------------------|
 | `push` | Operator runs ansible from controller over SSH | Default; no spec injection in cloud-init |
 | `pull` | VM self-configures via cloud-init | Operator polls for complete.json |
 
-PVE nodes default to **2-phase self-configure**: cloud-init bootstraps and starts a systemd oneshot service (`pve-config.service`) that runs `./run.sh scenario run pve-config --local`. The operator polls for success/failure markers via `WaitForFileAction`. Set `execution.mode: push` on a PVE node to use the legacy 11-phase SSH push lifecycle. See [pve-self-configure.md](../docs/designs/pve-self-configure.md) for design rationale. Push-mode VM nodes skip spec injection in cloud-init to avoid bootstrap race conditions.
+PVE nodes default to **2-phase self-configure**: cloud-init bootstraps and starts a systemd oneshot service (`pve-config.service`) that runs `./run.sh scenario run pve-config --local`. The operator polls for success/failure markers via `WaitForFileAction`. Set `execution.mode: push` on a PVE node to use the legacy 11-phase SSH push lifecycle. See [pve-self-configure.md](pve-self-configure.md) for design rationale. Push-mode VM nodes skip spec injection in cloud-init to avoid bootstrap race conditions.
 
 ## Manifest-Driven Orchestration
 
