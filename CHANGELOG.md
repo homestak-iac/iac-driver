@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.57 - 2026-03-22
+
 ### Features
 - Add `/config/{identity}` endpoint for pull-mode config distribution (#248)
 - Add `pve-config` scenario for 2-phase PVE self-configure (#311)
