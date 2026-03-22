@@ -3,7 +3,7 @@
 Actions for fetching config from the parent's /config endpoint and
 writing completion markers for the parent to poll.
 
-See docs/designs/pve-self-configure.md for design rationale.
+See docs/pve-self-configure.md for design rationale.
 """
 
 import json
