@@ -1,22 +1,8 @@
-# Test reports
-reports/*.md
-reports/*.json
-
-# Tofu state directories (managed by orchestrator)
-.states/
-
 # Python
 __pycache__/
 *.pyc
 *.pyo
 .venv/
-
-# Secrets - plaintext files are gitignored, only .enc files committed
-secrets/*.tfvars
-secrets/*.yaml
-secrets/*.json
-!secrets/.sops.yaml
-!secrets/*.enc
 
 # Claude Code local settings
 .claude/settings.local.json

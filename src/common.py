@@ -30,6 +30,11 @@ def get_homestak_root() -> Path:
     return Path(os.environ.get('HOMESTAK_ROOT', Path.home()))
 
 
+def get_log_dir() -> Path:
+    """Return the log directory: $HOMESTAK_ROOT/logs/."""
+    return get_homestak_root() / 'logs'
+
+
 def get_state_dir() -> Path:
     """Return the root state directory: $HOMESTAK_ROOT/.state/.
 

@@ -22,7 +22,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from config import list_hosts, load_host_config, get_base_dir
+from common import get_log_dir
+from config import list_hosts, load_host_config
 from scenarios import Orchestrator, get_scenario, list_scenarios
 from validation import validate_readiness, run_preflight_checks, format_preflight_results
 
@@ -479,8 +480,8 @@ def main():
     parser.add_argument(
         '--report-dir', '-r',
         type=Path,
-        default=get_base_dir() / 'reports',
-        help='Directory for test reports'
+        default=get_log_dir(),
+        help='Directory for test reports (default: $HOMESTAK_ROOT/logs/)'
     )
     parser.add_argument(
         '--skip', '-s',

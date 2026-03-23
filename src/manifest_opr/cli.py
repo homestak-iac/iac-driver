@@ -365,7 +365,8 @@ def test_main(argv: list) -> int:
         return 0 if success else 1
 
     # Real execution: track phases in a report
-    report_dir = Path(__file__).resolve().parent.parent.parent / 'reports'
+    from common import get_log_dir
+    report_dir = get_log_dir()
     report = TestReport(
         host=config.name,
         report_dir=report_dir,
